@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "791088345619",
+    "firebase_url": "https://cookingstuff-1546685438365.firebaseio.com",
+    "project_id": "cookingstuff-1546685438365",
+    "storage_bucket": "cookingstuff-1546685438365.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:791088345619:android:9724baab26d476b0",
+        "android_client_info": {
+          "package_name": "com.mishenka.cookingstuff"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "791088345619-tbukt3i1bv5hhq0vboibnp7m06srsoid.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mishenka.cookingstuff",
+            "certificate_hash": "b41b11b3088c6bdc42f862107354068433cdb810"
+          }
+        },
+        {
+          "client_id": "791088345619-mpjcm1mh23gfj5u07pbve4ckbsemjdaf.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyALVXlFAXscUzc5FN7StLBhVL-poGNZUwo"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "791088345619-mpjcm1mh23gfj5u07pbve4ckbsemjdaf.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
