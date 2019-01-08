@@ -9,6 +9,7 @@ import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.mishenka.cookingstuff.R
 import com.mishenka.cookingstuff.data.Recipe
+import com.mishenka.cookingstuff.utils.Utils
 
 class AddRecipeActivity : AppCompatActivity() {
 
@@ -18,7 +19,7 @@ class AddRecipeActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_recipe)
 
-        messagesDBRef = FirebaseDatabase.getInstance().reference.child("recipes")
+        messagesDBRef = FirebaseDatabase.getInstance().reference.child(Utils.CHILD_RECIPE)
 
         val addRecipeButton = findViewById<Button>(R.id.b_add_recipe)
         addRecipeButton.setOnClickListener {
