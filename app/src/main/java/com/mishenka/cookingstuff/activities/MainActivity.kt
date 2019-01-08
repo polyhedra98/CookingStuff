@@ -1,5 +1,6 @@
 package com.mishenka.cookingstuff.activities
 
+import android.content.Intent
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
@@ -47,6 +48,11 @@ class MainActivity : AppCompatActivity() {
             if (currentBookmarkFragment == null) {
                 supportFragmentManager.beginTransaction().replace(R.id.fragment_container, BookmarkFragment.newInstance(), BOOKMARK_TAG).commit()
             }
+        }
+
+        findViewById<Button>(R.id.tab_button_add_recipe).setOnClickListener {
+            val intent = Intent(this, AddRecipeActivity::class.java)
+            startActivity(intent)
         }
 
         findViewById<Button>(R.id.tab_button_chat).setOnClickListener {
