@@ -1,6 +1,6 @@
 package com.mishenka.cookingstuff.activities
 
-import android.content.DialogInterface
+import android.app.Activity
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v7.app.AlertDialog
@@ -17,12 +17,21 @@ import com.mishenka.cookingstuff.adapters.StepsAdapter
 import com.mishenka.cookingstuff.data.Recipe
 import com.mishenka.cookingstuff.data.Step
 import com.mishenka.cookingstuff.utils.Utils
+import android.content.Intent
+import android.graphics.Bitmap
+import android.provider.MediaStore
+import android.util.Log
+import java.io.IOException
+
 
 class AddRecipeActivity : AppCompatActivity(), StepsAdapter.StepListener {
     private val mStepsList = arrayListOf(Step(), Step(), Step())
 
     private lateinit var messagesDBRef : DatabaseReference
     private lateinit var mStepsAdapter : StepsAdapter
+
+    private val GALLERY = 1
+    private val CAMERA = 2
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -75,6 +84,29 @@ class AddRecipeActivity : AppCompatActivity(), StepsAdapter.StepListener {
         }
     }
 
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (resultCode == Activity.RESULT_CANCELED) {
+            return
+        }
+        if (requestCode == GALLERY) {
+            data?.let {
+                val contentURI = it.data
+                try {
+                    val bitmap = MediaStore.Images.Media.getBitmap(this.contentResolver, contentURI)
+                    //TODO("Process bitmap")
+                    Log.i("Nya", "Got it! ${bitmap.byteCount}")
+                } catch (e : IOException) {
+                    e.printStackTrace()
+                }
+            }
+        } else if (requestCode == CAMERA) {
+            val bitmap = data?.extras?.get("data") as Bitmap
+            //TODO("Process bitmap")
+            Log.i("Nya", "Got it! ${bitmap.byteCount}")
+        }
+    }
+
     private fun showPictureDialog() {
         val pictureDialog = AlertDialog.Builder(this)
         pictureDialog.setTitle("Select Action")
@@ -89,11 +121,15 @@ class AddRecipeActivity : AppCompatActivity(), StepsAdapter.StepListener {
     }
 
     private fun choosePhotoFromGallery() {
+        val galleryIntent = Intent(Intent.ACTION_PICK,
+                android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
 
+        startActivityForResult(galleryIntent, GALLERY)
     }
 
     private fun takePhotoFromCamera() {
-
+        val cameraIntent = Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE)
+        startActivityForResult(cameraIntent, CAMERA)
     }
 
 }
