@@ -11,7 +11,7 @@ import com.mishenka.cookingstuff.R
 
 
 class RecipeAdapter(context: Context, resource: Int, objects: List<Recipe>) : ArrayAdapter<Recipe>(context, resource, objects) {
-    val mResource = resource
+    private val mResource = resource
 
     override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
         val returnView = convertView ?: (context as Activity).layoutInflater.inflate(mResource, parent, false)

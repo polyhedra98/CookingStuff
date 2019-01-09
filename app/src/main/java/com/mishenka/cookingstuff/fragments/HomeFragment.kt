@@ -32,6 +32,7 @@ class HomeFragment : Fragment() {
     private var listener: HomeFragmentListener? = null
 
     private lateinit var mRecipeAdapter : RecipeAdapter
+    //TODO("Reimplement this as a RecycleView")
     private lateinit var mlvRecipes : ListView
     private lateinit var mdbRecipesReference: DatabaseReference
 
