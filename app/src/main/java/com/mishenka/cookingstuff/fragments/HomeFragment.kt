@@ -3,14 +3,19 @@ package com.mishenka.cookingstuff.fragments
 import android.content.Context
 import android.os.Bundle
 import android.support.v4.app.Fragment
+import android.support.v7.widget.LinearLayoutManager
+import android.support.v7.widget.RecyclerView
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import android.widget.ListView
+import android.widget.ImageView
+import android.widget.TextView
+import com.bumptech.glide.Glide
+import com.firebase.ui.database.FirebaseRecyclerAdapter
+import com.firebase.ui.database.FirebaseRecyclerOptions
 import com.google.firebase.database.*
 
 import com.mishenka.cookingstuff.R
-import com.mishenka.cookingstuff.adapters.RecipeAdapter
 import com.mishenka.cookingstuff.data.Recipe
 import com.mishenka.cookingstuff.utils.Utils
 
@@ -31,9 +36,9 @@ class HomeFragment : Fragment() {
     private var param2: String? = null
     private var listener: HomeFragmentListener? = null
 
-    private lateinit var mRecipeAdapter : RecipeAdapter
-    //TODO("Reimplement this as a RecycleView")
-    private lateinit var mlvRecipes : ListView
+    private lateinit var mFirebaseRecipeAdapter : FirebaseRecyclerAdapter<Recipe, RecipeViewHolder>
+    private lateinit var mlmRecipeManager : RecyclerView.LayoutManager
+    private lateinit var mrvRecipes : RecyclerView
     private lateinit var mdbRecipesReference: DatabaseReference
 
     private var mChildEventListener : ChildEventListener? = null
@@ -49,8 +54,8 @@ class HomeFragment : Fragment() {
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
                               savedInstanceState: Bundle?): View? {
         val returnView = inflater.inflate(R.layout.fragment_home, container, false)
-        mlvRecipes = returnView.findViewById(R.id.lv_recipes)
-        mlvRecipes.adapter = mRecipeAdapter
+        mrvRecipes = returnView.findViewById(R.id.rv_recipes)
+        mrvRecipes.adapter = mFirebaseRecipeAdapter
         return  returnView
     }
 
@@ -63,39 +68,66 @@ class HomeFragment : Fragment() {
             //throw RuntimeException(context.toString() + " must implement HomeFragmentListener")
         }
         mdbRecipesReference = FirebaseDatabase.getInstance().reference.child(Utils.CHILD_RECIPE)
+        val query = mdbRecipesReference
+        val options = FirebaseRecyclerOptions.Builder<Recipe>().setQuery(query, Recipe::class.java).build()
+        mFirebaseRecipeAdapter = object : FirebaseRecyclerAdapter<Recipe, RecipeViewHolder>(options) {
+            override fun onCreateViewHolder(p0: ViewGroup, p1: Int): RecipeViewHolder {
+                val view = LayoutInflater.from(p0.context)
+                        .inflate(R.layout.item_recipe, p0, false)
+                return RecipeViewHolder(view)
+            }
+
+            override fun onBindViewHolder(holder: RecipeViewHolder, position: Int, model: Recipe) {
+                holder.tvRecipeName.text = model.name
+                holder.tvAuthorName.text = model.author
+                if (model.mainPicUri != "" && model.mainPicUri != null) {
+                    Glide.with(holder.ivMainPicture.context)
+                            .load(model.mainPicUri)
+                            .into(holder.ivMainPicture)
+                }
+            }
+        }
         attachDatabaseListener()
-        mRecipeAdapter = RecipeAdapter(context, R.layout.item_recipe, ArrayList())
     }
 
     override fun onDetach() {
         super.onDetach()
         detachDatabaseListener()
-        mRecipeAdapter.clear()
         listener = null
     }
 
+    override fun onStart() {
+        super.onStart()
+        mFirebaseRecipeAdapter.startListening()
+    }
+
+    override fun onStop() {
+        super.onStop()
+        mFirebaseRecipeAdapter.stopListening()
+    }
+
+    //This one was needed earlier on, kinda useless now. Might need in the future
     private fun attachDatabaseListener() {
         if (mChildEventListener == null) {
             mChildEventListener = object : ChildEventListener {
                 override fun onCancelled(p0: DatabaseError) {
-                    TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+//                    TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
                 }
 
                 override fun onChildMoved(p0: DataSnapshot, p1: String?) {
-                    TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+//                    TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
                 }
 
                 override fun onChildChanged(p0: DataSnapshot, p1: String?) {
-                    TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+//                    TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
                 }
 
                 override fun onChildAdded(p0: DataSnapshot, p1: String?) {
-                    val recipe = p0.getValue(Recipe::class.java)
-                    mRecipeAdapter.add(recipe)
+//                    TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
                 }
 
                 override fun onChildRemoved(p0: DataSnapshot) {
-                    TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+//                    TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
                 }
             }
         }
@@ -107,6 +139,12 @@ class HomeFragment : Fragment() {
             mdbRecipesReference.removeEventListener(mChildEventListener!!)
             mChildEventListener = null
         }
+    }
+
+    private class RecipeViewHolder(recipeView : View) : RecyclerView.ViewHolder(recipeView) {
+        val tvRecipeName = recipeView.findViewById<TextView>(R.id.tv_recipe_name)
+        val tvAuthorName = recipeView.findViewById<TextView>(R.id.tv_author_name)
+        val ivMainPicture = recipeView.findViewById<ImageView>(R.id.iv_recipe_main)
     }
 
     interface HomeFragmentListener {
