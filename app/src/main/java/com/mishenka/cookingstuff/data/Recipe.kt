@@ -1,7 +1,10 @@
 package com.mishenka.cookingstuff.data
 
+
 data class Recipe (
-    var name : String? = "",
-    var author : String? = "",
-    var mainPicUri : String? = ""
+    var key : String? = null,
+    var name : String? = null,
+    var author : String? = null,
+    var authorUID : String? = null,
+    var mainPicUri : String? = null
 )

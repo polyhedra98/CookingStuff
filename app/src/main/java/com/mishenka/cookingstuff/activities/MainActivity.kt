@@ -6,17 +6,20 @@ import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
+import android.view.View
 import android.widget.Button
 import com.firebase.ui.auth.AuthUI
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.mishenka.cookingstuff.R
+import com.mishenka.cookingstuff.data.Recipe
 import com.mishenka.cookingstuff.fragments.BookmarkFragment
 import com.mishenka.cookingstuff.fragments.ChatFragment
 import com.mishenka.cookingstuff.fragments.HomeFragment
 import com.mishenka.cookingstuff.fragments.MeFragment
+import com.mishenka.cookingstuff.utils.Utils
 
-class MainActivity : AppCompatActivity() {
+class MainActivity : AppCompatActivity(), HomeFragment.HomeFragmentListener {
     private lateinit var mAuth : FirebaseAuth
     private var mUsername = "anonymous"
 
@@ -100,6 +103,12 @@ class MainActivity : AppCompatActivity() {
             }
         }
         return super.onOptionsItemSelected(item)
+    }
+
+    override fun onRecyclerItemClicked(recipeKey : String?) {
+        val intent = Intent(this, DetailActivity::class.java)
+        intent.putExtra(Utils.RECIPE_ID_KEY, recipeKey)
+        startActivity(intent)
     }
 
     private fun updateUI(user : FirebaseUser?) {

@@ -37,7 +37,6 @@ class AddRecipeActivity : AppCompatActivity(), StepsAdapter.StepListener {
 
     private lateinit var mSubmitButton : Button
 
-    private val mWholeRecipe = WholeRecipe()
     private var mMainPicDownloadUrl : Uri? = null
 
     private val MAIN_GALLERY = 1
@@ -78,14 +77,12 @@ class AddRecipeActivity : AppCompatActivity(), StepsAdapter.StepListener {
                 val user = FirebaseAuth.getInstance().currentUser
                 val username = if (user != null) user.displayName else "anonymous"
                 val key = mDBRef.child(Utils.CHILD_RECIPE).push().key!!
-                mDBRef.child(Utils.CHILD_RECIPE).child(key).setValue(Recipe(name = recipeName, author = username,
-                        mainPicUri = if (mMainPicDownloadUrl == null) "" else mMainPicDownloadUrl.toString()))
+                mDBRef.child(Utils.CHILD_RECIPE).child(key).setValue(Recipe(key = key, name = recipeName, author = username,
+                        authorUID = user?.uid, mainPicUri = if (mMainPicDownloadUrl == null) "" else mMainPicDownloadUrl.toString()))
 
                 //TODO("Start an Async task instead of downloading stuff before submit button is clicked")
-                mWholeRecipe.name = recipeName
-                mWholeRecipe.author = username
-                mWholeRecipe.mainPicUri = if (mMainPicDownloadUrl == null) "" else mMainPicDownloadUrl.toString()
-                mDBRef.child(Utils.CHILD_WHOLE_RECIPE).child(key).setValue(mWholeRecipe)
+                mDBRef.child(Utils.CHILD_WHOLE_RECIPE).child(key).setValue(WholeRecipe(key = key, name = recipeName, author = username,
+                        authorUID = user?.uid, mainPicUri = if (mMainPicDownloadUrl == null) "" else mMainPicDownloadUrl.toString()))
                 finish()
             }
         }
