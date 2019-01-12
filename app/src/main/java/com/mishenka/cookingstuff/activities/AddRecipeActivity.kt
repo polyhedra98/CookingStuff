@@ -14,18 +14,21 @@ import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.mishenka.cookingstuff.R
 import com.mishenka.cookingstuff.adapters.StepsAdapter
-import com.mishenka.cookingstuff.data.Recipe
 import com.mishenka.cookingstuff.data.Step
 import android.content.Intent
 import android.net.Uri
+import android.provider.MediaStore
 import com.google.android.gms.tasks.Continuation
 import com.google.android.gms.tasks.Task
+import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageMetadata
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.UploadTask
+import com.mishenka.cookingstuff.data.Recipe
 import com.mishenka.cookingstuff.data.WholeRecipe
 import com.mishenka.cookingstuff.utils.Utils
+import kotlinx.coroutines.*
 
 
 class AddRecipeActivity : AppCompatActivity(), StepsAdapter.StepListener {
@@ -37,7 +40,7 @@ class AddRecipeActivity : AppCompatActivity(), StepsAdapter.StepListener {
 
     private lateinit var mSubmitButton : Button
 
-    private var mMainPicDownloadUrl : Uri? = null
+    private var mMainPicUri : Uri? = null
 
     private val MAIN_GALLERY = 1
     private val MAIN_CAMERA = 2
@@ -70,11 +73,22 @@ class AddRecipeActivity : AppCompatActivity(), StepsAdapter.StepListener {
         }
 
         mSubmitButton = findViewById(R.id.b_add_recipe)
-        mSubmitButton.setOnClickListener {
+        mSubmitButton.setOnClickListener { b_submit ->
             val recipeName = findViewById<TextView>(R.id.et_recipe_name).text.toString()
 
             if (!recipeName.isEmpty()) {
-                val user = FirebaseAuth.getInstance().currentUser
+                GlobalScope.launch {
+                    val user = FirebaseAuth.getInstance().currentUser
+                    val mainPicDownloadUrl = uploadMainPic(user!!)
+                    val username = user.displayName
+                    val key = mDBRef.child(Utils.CHILD_RECIPE).push().key!!
+                    mDBRef.child(Utils.CHILD_RECIPE).child(key).setValue(Recipe(key = key, name = recipeName, author = username,
+                            authorUID = user.uid, mainPicUri = mainPicDownloadUrl.toString()))
+                    mDBRef.child(Utils.CHILD_WHOLE_RECIPE).child(key).setValue(WholeRecipe(key = key, name = recipeName, author = username,
+                            authorUID = user.uid, mainPicUri = mainPicDownloadUrl.toString()))
+                }
+
+                /*val user = FirebaseAuth.getInstance().currentUser
                 val username = if (user != null) user.displayName else "anonymous"
                 val key = mDBRef.child(Utils.CHILD_RECIPE).push().key!!
                 mDBRef.child(Utils.CHILD_RECIPE).child(key).setValue(Recipe(key = key, name = recipeName, author = username,
@@ -82,10 +96,36 @@ class AddRecipeActivity : AppCompatActivity(), StepsAdapter.StepListener {
 
                 //TODO("Start an Async task instead of downloading stuff before submit button is clicked")
                 mDBRef.child(Utils.CHILD_WHOLE_RECIPE).child(key).setValue(WholeRecipe(key = key, name = recipeName, author = username,
-                        authorUID = user?.uid, mainPicUri = if (mMainPicDownloadUrl == null) "" else mMainPicDownloadUrl.toString()))
+                        authorUID = user?.uid, mainPicUri = if (mMainPicDownloadUrl == null) "" else mMainPicDownloadUrl.toString()))*/
                 finish()
             }
         }
+    }
+
+    private suspend fun uploadMainPic(user : FirebaseUser) : Uri? {
+        val metadata = StorageMetadata.Builder().setContentType(Utils.IMAGE_CONTENT_TYPE).build()
+        val photoRef = mStepsSRef.child("${user.uid}/${mMainPicUri!!.lastPathSegment!!}")
+        val uploadTask = photoRef.putFile(mMainPicUri!!, metadata)
+        val uriTask = uploadTask.continueWithTask(Continuation<UploadTask.TaskSnapshot, Task<Uri>> { task ->
+            if (!task.isSuccessful) {
+                task.exception?.let {
+                    throw it
+                }
+            }
+            return@Continuation photoRef.downloadUrl
+        }).addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+
+            } else {
+                task.exception?.let {
+                    throw it
+                }
+            }
+        }
+        //TODO("WHAT A JUNK LOL)
+        //TODO("I couldn't join, so I didn't know what else to do")
+        while (!uriTask.isComplete) {}
+        return uriTask.result
     }
 
     override fun onStepPicButtonClicked(v: View?, pv : View?, s : Step?) {
@@ -115,9 +155,9 @@ class AddRecipeActivity : AppCompatActivity(), StepsAdapter.StepListener {
         }
         if (requestCode == MAIN_GALLERY) {
             data?.let {intent ->
-                val contentURI = intent.data
-                val metadata = StorageMetadata.Builder().setContentType(Utils.IMAGE_CONTENT_TYPE).build()
-                val photoRef = mStepsSRef.child(contentURI!!.lastPathSegment!!)
+                mMainPicUri = intent.data
+                /*val metadata = StorageMetadata.Builder().setContentType(Utils.IMAGE_CONTENT_TYPE).build()
+                val photoRef = mStepsSRef.TODO("Additional node here")child(contentURI!!.lastPathSegment!!)
                 mSubmitButton.isEnabled = false
                 val uploadTask = photoRef.putFile(contentURI, metadata)
                 val uriTask = uploadTask.continueWithTask(Continuation<UploadTask.TaskSnapshot, Task<Uri>> { task ->
@@ -136,9 +176,11 @@ class AddRecipeActivity : AppCompatActivity(), StepsAdapter.StepListener {
                             throw it
                         }
                     }
-                }
+                }*/
 
-
+                val ivMainPic = findViewById<ImageView>(R.id.iv_main_pic)
+                val bitmap = MediaStore.Images.Media.getBitmap(this.contentResolver, mMainPicUri)
+                ivMainPic.setImageBitmap(bitmap)
                 /*val bitmap = MediaStore.Images.Media.getBitmap(this.contentResolver, contentURI)
                     //TODO("Process bitmap")
                     Log.i("Nya", "Got it! ${bitmap.byteCount}")
@@ -162,11 +204,11 @@ class AddRecipeActivity : AppCompatActivity(), StepsAdapter.StepListener {
     private fun showPictureDialog(RC_CODE_GALLERY : Int, RC_CODE_CAMERA: Int) {
         val pictureDialog = AlertDialog.Builder(this)
         pictureDialog.setTitle("Select Action")
-        val pictureDialogItems = arrayOf("Gallery", "Camera")
+        val pictureDialogItems = arrayOf("Gallery")
         pictureDialog.setItems(pictureDialogItems) { dialog, which ->
             when (which) {
                 0 -> choosePhotoFromGallery(RC_CODE_GALLERY)
-                1 -> takePhotoFromCamera(RC_CODE_CAMERA)
+                //1 -> takePhotoFromCamera(RC_CODE_CAMERA)
             }
         }
         pictureDialog.show()
@@ -183,5 +225,4 @@ class AddRecipeActivity : AppCompatActivity(), StepsAdapter.StepListener {
         val cameraIntent = Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE)
         startActivityForResult(cameraIntent, RC_CODE)
     }
-
 }
