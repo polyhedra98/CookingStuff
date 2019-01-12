@@ -59,7 +59,7 @@
         <ListView
             android:id="@+id/lv_steps"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="250dp" />
 
         <Button
             android:id="@+id/b_add_recipe"

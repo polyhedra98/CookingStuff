@@ -17,7 +17,7 @@ import com.mishenka.cookingstuff.adapters.StepsAdapter
 import com.mishenka.cookingstuff.data.Step
 import android.content.Intent
 import android.net.Uri
-import android.provider.MediaStore
+import com.bumptech.glide.Glide
 import com.google.android.gms.tasks.Continuation
 import com.google.android.gms.tasks.Task
 import com.google.firebase.auth.FirebaseUser
@@ -32,7 +32,7 @@ import kotlinx.coroutines.*
 
 
 class AddRecipeActivity : AppCompatActivity(), StepsAdapter.StepListener {
-    private val mStepsList = arrayListOf(Step(), Step(), Step())
+    private val mStepsList : ArrayList<Step> = arrayListOf(Step(), Step(), Step())
 
     private lateinit var mDBRef : DatabaseReference
     private lateinit var mStepsSRef : StorageReference
@@ -41,6 +41,10 @@ class AddRecipeActivity : AppCompatActivity(), StepsAdapter.StepListener {
     private lateinit var mSubmitButton : Button
 
     private var mMainPicUri : Uri? = null
+
+    private var mCurrentStep : Step? = null
+    private var mCurrentButton : View? = null
+    private var mCurrentParentView : View? = null
 
     private val MAIN_GALLERY = 1
     private val MAIN_CAMERA = 2
@@ -60,6 +64,10 @@ class AddRecipeActivity : AppCompatActivity(), StepsAdapter.StepListener {
             if (userVerification()) {
                 showPictureDialog(MAIN_GALLERY, MAIN_CAMERA)
             }
+            val ivMainPic = findViewById<ImageView>(R.id.iv_main_pic)
+            Glide.with(ivMainPic.context)
+                    .load(mMainPicUri)
+                    .into(ivMainPic)
         }
 
         val stepsList = findViewById<ListView>(R.id.lv_steps)
@@ -85,17 +93,13 @@ class AddRecipeActivity : AppCompatActivity(), StepsAdapter.StepListener {
                     mDBRef.child(Utils.CHILD_RECIPE).child(key).setValue(Recipe(key = key, name = recipeName, author = username,
                             authorUID = user.uid, mainPicUri = mainPicDownloadUrl.toString()))
                     mDBRef.child(Utils.CHILD_WHOLE_RECIPE).child(key).setValue(WholeRecipe(key = key, name = recipeName, author = username,
-                            authorUID = user.uid, mainPicUri = mainPicDownloadUrl.toString()))
+                            authorUID = user.uid, mainPicUri = mainPicDownloadUrl.toString(), stepsList = mStepsList))
                 }
 
                 /*val user = FirebaseAuth.getInstance().currentUser
                 val username = if (user != null) user.displayName else "anonymous"
                 val key = mDBRef.child(Utils.CHILD_RECIPE).push().key!!
                 mDBRef.child(Utils.CHILD_RECIPE).child(key).setValue(Recipe(key = key, name = recipeName, author = username,
-                        authorUID = user?.uid, mainPicUri = if (mMainPicDownloadUrl == null) "" else mMainPicDownloadUrl.toString()))
-
-                //TODO("Start an Async task instead of downloading stuff before submit button is clicked")
-                mDBRef.child(Utils.CHILD_WHOLE_RECIPE).child(key).setValue(WholeRecipe(key = key, name = recipeName, author = username,
                         authorUID = user?.uid, mainPicUri = if (mMainPicDownloadUrl == null) "" else mMainPicDownloadUrl.toString()))*/
                 finish()
             }
@@ -103,6 +107,7 @@ class AddRecipeActivity : AppCompatActivity(), StepsAdapter.StepListener {
     }
 
     private suspend fun uploadMainPic(user : FirebaseUser) : Uri? {
+        if (mMainPicUri == null) return null
         val metadata = StorageMetadata.Builder().setContentType(Utils.IMAGE_CONTENT_TYPE).build()
         val photoRef = mStepsSRef.child("${user.uid}/${mMainPicUri!!.lastPathSegment!!}")
         val uploadTask = photoRef.putFile(mMainPicUri!!, metadata)
@@ -124,28 +129,17 @@ class AddRecipeActivity : AppCompatActivity(), StepsAdapter.StepListener {
         }
         //TODO("WHAT A JUNK LOL)
         //TODO("I couldn't join, so I didn't know what else to do")
+        //TODO("Works for now, gonna change later")
         while (!uriTask.isComplete) {}
         return uriTask.result
     }
 
-    override fun onStepPicButtonClicked(v: View?, pv : View?, s : Step?) {
+    override fun onStepPicButtonClicked(v: View?, pv : View?, s : Step) {
         if (!userVerification()) return
+        mCurrentButton = v
+        mCurrentParentView = pv
+        mCurrentStep = s
         showPictureDialog(STEP_GALLERY, STEP_CAMERA)
-        v?.visibility = View.INVISIBLE
-        when (v?.id) {
-            R.id.b_first_step -> {
-                s?.firstButtonClicked = true
-                pv?.findViewById<ImageView>(R.id.iv_step_first)?.visibility = View.VISIBLE
-            }
-            R.id.b_second_step -> {
-                s?.secondButtonClicked = true
-                pv?.findViewById<ImageView>(R.id.iv_step_second)?.visibility = View.VISIBLE
-            }
-            R.id.b_third_step -> {
-                s?.thirdButtonClicked = true
-                pv?.findViewById<ImageView>(R.id.iv_step_third)?.visibility = View.VISIBLE
-            }
-        }
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -153,8 +147,8 @@ class AddRecipeActivity : AppCompatActivity(), StepsAdapter.StepListener {
         if (resultCode == Activity.RESULT_CANCELED) {
             return
         }
-        if (requestCode == MAIN_GALLERY) {
-            data?.let {intent ->
+        when(requestCode) {
+            MAIN_GALLERY -> data?.let {intent ->
                 mMainPicUri = intent.data
                 /*val metadata = StorageMetadata.Builder().setContentType(Utils.IMAGE_CONTENT_TYPE).build()
                 val photoRef = mStepsSRef.TODO("Additional node here")child(contentURI!!.lastPathSegment!!)
@@ -177,10 +171,6 @@ class AddRecipeActivity : AppCompatActivity(), StepsAdapter.StepListener {
                         }
                     }
                 }*/
-
-                val ivMainPic = findViewById<ImageView>(R.id.iv_main_pic)
-                val bitmap = MediaStore.Images.Media.getBitmap(this.contentResolver, mMainPicUri)
-                ivMainPic.setImageBitmap(bitmap)
                 /*val bitmap = MediaStore.Images.Media.getBitmap(this.contentResolver, contentURI)
                     //TODO("Process bitmap")
                     Log.i("Nya", "Got it! ${bitmap.byteCount}")
@@ -188,14 +178,47 @@ class AddRecipeActivity : AppCompatActivity(), StepsAdapter.StepListener {
                     e.printStackTrace()
                 }*/
             }
-        } else if (requestCode == MAIN_CAMERA) {
-            TODO("Implement")
-            /*val bitmap = data?.extras?.get("data") as Bitmap
-            //TODO("Process bitmap")
-            Log.i("Nya", "Got it! ${bitmap.byteCount}")*/
-
+            STEP_GALLERY -> data?.let { intent ->
+                val currentStepPicUri : Uri? = intent.data
+                currentStepPicUri?.let {
+                    mCurrentButton?.visibility = View.INVISIBLE
+                    when (mCurrentButton?.id) {
+                        R.id.b_first_step -> {
+                            mCurrentStep?.firstPicUri = currentStepPicUri.toString()
+                            val firstPic = mCurrentParentView?.findViewById<ImageView>(R.id.iv_step_first)
+                            firstPic?.visibility = View.VISIBLE
+                            Glide.with(firstPic?.context)
+                                    .load(currentStepPicUri)
+                                    .into(firstPic)
+                        }
+                        R.id.b_second_step -> {
+                            mCurrentStep?.secondPicUri = currentStepPicUri.toString()
+                            val secondPic = mCurrentParentView?.findViewById<ImageView>(R.id.iv_step_second)
+                            secondPic?.visibility = View.VISIBLE
+                            Glide.with(secondPic?.context)
+                                    .load(currentStepPicUri)
+                                    .into(secondPic)
+                        }
+                        R.id.b_third_step -> {
+                            mCurrentStep?.thirdPicUri = currentStepPicUri.toString()
+                            val thirdPic = mCurrentParentView?.findViewById<ImageView>(R.id.iv_step_third)
+                            thirdPic?.visibility = View.VISIBLE
+                            Glide.with(thirdPic?.context)
+                                    .load(currentStepPicUri)
+                                    .into(thirdPic)
+                        }
+                        else -> {
+                        }
+                    }
+                    mCurrentButton = null
+                    mCurrentParentView = null
+                    mCurrentStep = null
+                }
+            }
         }
     }
+
+
 
     private fun userVerification() : Boolean {
         return FirebaseAuth.getInstance().currentUser != null

@@ -5,5 +5,6 @@ data class WholeRecipe (
         var name : String? = null,
         var author : String? = null,
         var authorUID : String? = null,
-        var mainPicUri : String? = null
+        var mainPicUri : String? = null,
+        var stepsList : List<Step>? = null
 )

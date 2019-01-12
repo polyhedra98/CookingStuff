@@ -1,7 +1,10 @@
 package com.mishenka.cookingstuff.data
 
+import android.net.Uri
+
 data class Step(
-        var firstButtonClicked : Boolean = false,
-        var secondButtonClicked : Boolean = false,
-        var thirdButtonClicked : Boolean = false
+        var stepDescription : String? = null,
+        var firstPicUri : String? = null,
+        var secondPicUri : String? = null,
+        var thirdPicUri : String? = null
 )
