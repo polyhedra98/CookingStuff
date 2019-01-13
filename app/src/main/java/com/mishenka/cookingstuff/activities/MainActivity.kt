@@ -54,8 +54,15 @@ class MainActivity : AppCompatActivity(), HomeFragment.HomeFragmentListener {
         }
 
         findViewById<Button>(R.id.tab_button_add_recipe).setOnClickListener {
-            val intent = Intent(this, AddRecipeActivity::class.java)
-            startActivity(intent)
+            if (mAuth.currentUser != null) {
+                val intent = Intent(this, AddRecipeActivity::class.java)
+                startActivity(intent)
+            } else {
+                val currentHomeFragment = supportFragmentManager.findFragmentByTag(HOME_TAG)
+                if (currentHomeFragment == null) {
+                    supportFragmentManager.beginTransaction().replace(R.id.fragment_container, HomeFragment.newInstance(), HOME_TAG).commit()
+                }
+            }
         }
 
         findViewById<Button>(R.id.tab_button_chat).setOnClickListener {
