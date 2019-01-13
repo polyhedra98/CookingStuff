@@ -108,7 +108,7 @@ class AddRecipeActivity : AppCompatActivity(), StepsAdapter.StepListener {
                             while (counter < mStepsList.size) {
                                 mStepsList[counter].firstPicUri = null
                                 mStepsList[counter].secondPicUri = null
-                                mStepsList[counter].ivThirdPic = null
+                                mStepsList[counter].thirdPicUri = null
                                 counter++
                             }
                         }
@@ -170,7 +170,7 @@ class AddRecipeActivity : AppCompatActivity(), StepsAdapter.StepListener {
                                     .into(secondPic)
                         }
                         R.id.b_third_step -> {
-                            mCurrentStep?.ivThirdPic = currentStepPicUri.toString()
+                            mCurrentStep?.thirdPicUri = currentStepPicUri.toString()
                             val thirdPic = mCurrentParentView?.findViewById<ImageView>(R.id.iv_step_third)
                             thirdPic?.visibility = View.VISIBLE
                             Glide.with(thirdPic?.context)
@@ -263,7 +263,7 @@ class AddRecipeActivity : AppCompatActivity(), StepsAdapter.StepListener {
                 step.secondPicUri?.let {
                     stepPicUris.add(it)
                 }
-                step.ivThirdPic?.let {
+                step.thirdPicUri?.let {
                     stepPicUris.add(it)
                 }
             }
