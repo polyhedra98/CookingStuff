@@ -130,6 +130,6 @@ class MainActivity : AppCompatActivity(), HomeFragment.HomeFragmentListener {
     }
 
     companion object {
-        public final val RC_SIGN_IN = 1
+        public const val RC_SIGN_IN = 1
     }
 }

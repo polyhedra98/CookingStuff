@@ -69,6 +69,7 @@ class AddRecipeActivity : AppCompatActivity(), StepsAdapter.StepListener {
             }
         }
 
+        //TODO("UI seems buggy, list gets cut off")
         val stepsList = findViewById<ListView>(R.id.lv_steps)
         stepsList.adapter = mStepsAdapter
 
@@ -107,7 +108,7 @@ class AddRecipeActivity : AppCompatActivity(), StepsAdapter.StepListener {
                             while (counter < mStepsList.size) {
                                 mStepsList[counter].firstPicUri = null
                                 mStepsList[counter].secondPicUri = null
-                                mStepsList[counter].thirdPicUri = null
+                                mStepsList[counter].ivThirdPic = null
                                 counter++
                             }
                         }
@@ -169,7 +170,7 @@ class AddRecipeActivity : AppCompatActivity(), StepsAdapter.StepListener {
                                     .into(secondPic)
                         }
                         R.id.b_third_step -> {
-                            mCurrentStep?.thirdPicUri = currentStepPicUri.toString()
+                            mCurrentStep?.ivThirdPic = currentStepPicUri.toString()
                             val thirdPic = mCurrentParentView?.findViewById<ImageView>(R.id.iv_step_third)
                             thirdPic?.visibility = View.VISIBLE
                             Glide.with(thirdPic?.context)
@@ -262,7 +263,7 @@ class AddRecipeActivity : AppCompatActivity(), StepsAdapter.StepListener {
                 step.secondPicUri?.let {
                     stepPicUris.add(it)
                 }
-                step.thirdPicUri?.let {
+                step.ivThirdPic?.let {
                     stepPicUris.add(it)
                 }
             }

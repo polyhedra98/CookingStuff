@@ -47,12 +47,12 @@ class StepsAdapter(context: Context, resource: Int, objects: List<Step>) : Array
 
         val bThirdStep = returnView.findViewById<Button>(R.id.b_third_step)
         bThirdStep.setOnClickListener(OnAddButtonClickListener(mStepListener, returnView, step))
-        bThirdStep.visibility = if (step.thirdPicUri != null) View.INVISIBLE else View.VISIBLE
+        bThirdStep.visibility = if (step.ivThirdPic != null) View.INVISIBLE else View.VISIBLE
         val ivThirdStep = returnView.findViewById<ImageView>(R.id.iv_step_third)
         ivThirdStep.visibility = bThirdStep.visibility.xor(View.INVISIBLE)
         if (ivThirdStep.visibility == View.VISIBLE) {
             Glide.with(ivThirdStep.context)
-                    .load(step.thirdPicUri)
+                    .load(step.ivThirdPic)
                     .into(ivThirdStep)
         }
 

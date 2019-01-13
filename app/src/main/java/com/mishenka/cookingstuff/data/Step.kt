@@ -6,5 +6,5 @@ data class Step(
         var stepDescription : String? = null,
         var firstPicUri : String? = null,
         var secondPicUri : String? = null,
-        var thirdPicUri : String? = null
+        var ivThirdPic : String? = null
 )
