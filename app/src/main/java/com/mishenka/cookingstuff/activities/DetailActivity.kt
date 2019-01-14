@@ -79,5 +79,19 @@ class DetailActivity : AppCompatActivity() {
             }
         }
         wholeRecipeRef.addListenerForSingleValueEvent(wholeStepListener)
+
+        val currentRecipeRef = FirebaseDatabase.getInstance().reference.child(Utils.CHILD_RECIPE).child(mRecipeKey!!)
+        currentRecipeRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onCancelled(p0: DatabaseError) {
+                throw p0.toException()
+            }
+
+            override fun onDataChange(p0: DataSnapshot) {
+                val currentReadCount = p0.child(Utils.CHILD_RECIPE_READ_COUNT).value as Long?
+                currentReadCount?.let {
+                    currentRecipeRef.child(Utils.CHILD_RECIPE_READ_COUNT).setValue(it + 1)
+                }
+            }
+        })
     }
 }
