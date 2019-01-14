@@ -59,13 +59,13 @@ class DetailActivity : AppCompatActivity() {
                             if (step.containsKey(Utils.WHOLE_RECIPE_STEP_DESCRIPTION_CHILD)) {
                                 currentStep.stepDescription = step[Utils.WHOLE_RECIPE_STEP_DESCRIPTION_CHILD]
                             }
-                            if (step.containsKey(Utils.WHOLE_RECIPE_STEP_FIRST_URL_CHILD)) {
+                            if (step.containsKey(Utils.WHOLE_RECIPE_STEP_FIRST_URL_CHILD) && !step[Utils.WHOLE_RECIPE_STEP_FIRST_URL_CHILD]!!.contains("content")) {
                                 currentStep.firstPicUri = step[Utils.WHOLE_RECIPE_STEP_FIRST_URL_CHILD]
                             }
-                            if (step.containsKey(Utils.WHOLE_RECIPE_STEP_SECOND_URL_CHILD)) {
+                            if (step.containsKey(Utils.WHOLE_RECIPE_STEP_SECOND_URL_CHILD) && !step[Utils.WHOLE_RECIPE_STEP_SECOND_URL_CHILD]!!.contains("content")) {
                                 currentStep.secondPicUri = step[Utils.WHOLE_RECIPE_STEP_SECOND_URL_CHILD]
                             }
-                            if (step.containsKey(Utils.WHOLE_RECIPE_STEP_THIRD_URL_CHILD)) {
+                            if (step.containsKey(Utils.WHOLE_RECIPE_STEP_THIRD_URL_CHILD) && !step[Utils.WHOLE_RECIPE_STEP_THIRD_URL_CHILD]!!.contains("content")) {
                                 currentStep.thirdPicUri = step[Utils.WHOLE_RECIPE_STEP_THIRD_URL_CHILD]
                             }
                             mStepsList.add(currentStep)

@@ -24,25 +24,37 @@ class NonInteractiveStepsAdapter(context : Context, resource : Int, objects : Li
             tvStepDescription.text = it
         }
 
+        val picUriList = ArrayList<String>()
+        val picList = arrayListOf<ImageView>(
+                returnView.findViewById(R.id.iv_detail_first_step),
+                returnView.findViewById(R.id.iv_detail_second_step),
+                returnView.findViewById(R.id.iv_detail_third_step))
+
         step.firstPicUri?.let {
-            val ivFirstPic = returnView.findViewById<ImageView>(R.id.iv_detail_first_step)
+            /*val ivFirstPic = returnView.findViewById<ImageView>(R.id.iv_detail_first_step)
             Glide.with(ivFirstPic.context)
                     .load(it)
-                    .into(ivFirstPic)
+                    .into(ivFirstPic)*/
+            picUriList.add(it)
         }
 
         step.secondPicUri?.let {
-            val ivSecondPic = returnView.findViewById<ImageView>(R.id.iv_detail_second_step)
-            Glide.with(ivSecondPic.context)
-                    .load(it)
-                    .into(ivSecondPic)
+            picUriList.add(it)
         }
 
         step.thirdPicUri?.let {
-            val ivThirdPic = returnView.findViewById<ImageView>(R.id.iv_detail_third_step)
-            Glide.with(ivThirdPic.context)
-                    .load(it)
-                    .into(ivThirdPic)
+            picUriList.add(it)
+        }
+
+        var counter = -1
+        while (++counter < picUriList.size) {
+           Glide.with(picList[counter].context)
+                   .load(picUriList[counter])
+                   .into(picList[counter])
+        }
+        counter--
+        while (++counter < picList.size) {
+            picList[counter].visibility = View.GONE
         }
 
         return returnView
