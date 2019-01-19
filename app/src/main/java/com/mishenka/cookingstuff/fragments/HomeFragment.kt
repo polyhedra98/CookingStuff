@@ -11,10 +11,10 @@ import com.bumptech.glide.Glide
 import com.firebase.ui.database.FirebaseRecyclerAdapter
 import com.firebase.ui.database.FirebaseRecyclerOptions
 import com.google.firebase.database.*
-
 import com.mishenka.cookingstuff.R
 import com.mishenka.cookingstuff.data.Recipe
 import com.mishenka.cookingstuff.utils.Utils
+import com.mishenka.cookingstuff.views.UpperRecipe
 
 private const val ARG_PARAM1 = "param1"
 private const val ARG_PARAM2 = "param2"
@@ -73,18 +73,22 @@ class HomeFragment : Fragment() {
             override fun onCreateViewHolder(p0: ViewGroup, p1: Int): RecipeViewHolder {
                 val view = LayoutInflater.from(p0.context)
                         .inflate(R.layout.item_recipe, p0, false)
-                return RecipeViewHolder(view).listen { pos, type ->
+                return RecipeViewHolder(view)/*.listen { pos, type ->
                     listener?.onRecyclerItemClicked(getItem(pos).key)
-                }
+                }*/
             }
 
             override fun onBindViewHolder(holder: RecipeViewHolder, position: Int, model: Recipe) {
                 holder.tvRecipeName.text = model.name
                 holder.tvAuthorName.text = model.author
+                holder.tvWatchCount.text = "Read count: ${model.readCount}"
                 if (model.mainPicUri != "" && model.mainPicUri != null) {
                     Glide.with(holder.ivMainPicture.context)
                             .load(model.mainPicUri)
                             .into(holder.ivMainPicture)
+                }
+                holder.upperRecipe.setOnClickListener {
+                    listener?.onRecyclerItemClicked(getItem(position).key)
                 }
             }
         }
@@ -108,12 +112,14 @@ class HomeFragment : Fragment() {
         mFirebaseRecipeAdapter.stopListening()
     }
 
+    /* Reimplemented recipe, no need for this method anymore. It looks cool though, so I won't delete it
     private fun <T : RecyclerView.ViewHolder> T.listen(event : (position : Int, type : Int) -> Unit) : T {
         itemView.setOnClickListener {
             event.invoke(adapterPosition, itemViewType)
         }
         return this
     }
+    */
 
     //This one was needed earlier on, kinda useless now. Might need in the future
     private fun attachDatabaseListener() {
@@ -151,9 +157,12 @@ class HomeFragment : Fragment() {
     }
 
     private class RecipeViewHolder(recipeView : View) : RecyclerView.ViewHolder(recipeView) {
-        val tvRecipeName = recipeView.findViewById<TextView>(R.id.tv_recipe_name)
-        val tvAuthorName = recipeView.findViewById<TextView>(R.id.tv_author_name)
-        val ivMainPicture = recipeView.findViewById<ImageView>(R.id.iv_recipe_main)
+        val upperRecipe = recipeView.findViewById<UpperRecipe>(R.id.ur_recipe)
+        val tvRecipeName = upperRecipe.findViewById<TextView>(R.id.tv_upper_recipe_name)
+        val tvAuthorName = upperRecipe.findViewById<TextView>(R.id.tv_upper_author_name)
+        val ivMainPicture = upperRecipe.findViewById<ImageView>(R.id.iv_upper_recipe_main)
+
+        val tvWatchCount = recipeView.findViewById<TextView>(R.id.tv_watch_count)
     }
 
     interface HomeFragmentListener {

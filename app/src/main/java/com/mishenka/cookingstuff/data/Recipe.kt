@@ -6,5 +6,6 @@ data class Recipe (
     var name : String? = null,
     var author : String? = null,
     var authorUID : String? = null,
+    var readCount : Int = 0,
     var mainPicUri : String? = null
 )
