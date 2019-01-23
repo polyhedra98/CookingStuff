@@ -6,13 +6,15 @@ import android.os.Bundle
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
-import android.view.View
 import android.widget.Button
 import com.firebase.ui.auth.AuthUI
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import com.mishenka.cookingstuff.R
-import com.mishenka.cookingstuff.data.Recipe
 import com.mishenka.cookingstuff.fragments.BookmarkFragment
 import com.mishenka.cookingstuff.fragments.ChatFragment
 import com.mishenka.cookingstuff.fragments.HomeFragment
@@ -113,16 +115,78 @@ class MainActivity : AppCompatActivity(), HomeFragment.HomeFragmentListener {
     }
 
     override fun onRecyclerItemClicked(recipeKey : String?) {
-        val intent = Intent(this, DetailActivity::class.java)
-        intent.putExtra(Utils.RECIPE_ID_KEY, recipeKey)
-        startActivity(intent)
+        recipeKey?.let {
+            val intent = Intent(this, DetailActivity::class.java)
+            intent.putExtra(Utils.RECIPE_ID_KEY, it)
+            startActivity(intent)
+        }
+    }
+
+    override fun onStarButtonClicked(recipeKey: String?, view : Button) {
+        recipeKey?.let { key ->
+            mAuth.currentUser?.let { user ->
+                var alreadyStarred = false
+                val currentUserRef = FirebaseDatabase.getInstance().reference.child(Utils.CHILD_USER).child(user.uid)
+                currentUserRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                    override fun onCancelled(p0: DatabaseError) {
+                        throw p0.toException()
+                    }
+
+                    override fun onDataChange(p0: DataSnapshot) {
+                        val currentPost = p0.child(Utils.CHILD_STARRED_POSTS).child(key).value as Boolean?
+                        if (currentPost != null && currentPost) {
+                            alreadyStarred = true
+                            Log.i("Nya", "Already starred")
+                        }
+                        if (!alreadyStarred) {
+                            val currentStarRef = currentUserRef.child(Utils.CHILD_STARRED_POSTS).child(key)
+                            currentStarRef.setValue(true)
+
+                            val currentRecipeRef = FirebaseDatabase.getInstance().reference.child(Utils.CHILD_RECIPE).child(key)
+                            currentRecipeRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                                override fun onCancelled(p0: DatabaseError) {
+                                    throw p0.toException()
+                                }
+
+                                override fun onDataChange(p0: DataSnapshot) {
+                                    val currentStarCount = p0.child(Utils.CHILD_RECIPE_STAR_COUNT).value as Long?
+                                    if (currentStarCount != null) {
+                                        currentRecipeRef.child(Utils.CHILD_RECIPE_STAR_COUNT).setValue(currentStarCount + 1)
+                                    } else {
+                                        currentRecipeRef.child(Utils.CHILD_RECIPE_STAR_COUNT).setValue(1)
+                                    }
+                                    Log.i("Nya", "Starred")
+                                }
+                            })
+                            view.text = "Starred!"
+                        } else {
+                            val currentStarRef = currentUserRef.child(Utils.CHILD_STARRED_POSTS).child(key)
+                            currentStarRef.setValue(null)
+
+                            val currentRecipeRef = FirebaseDatabase.getInstance().reference.child(Utils.CHILD_RECIPE).child(key)
+                            currentRecipeRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                                override fun onCancelled(p0: DatabaseError) {
+                                    throw p0.toException()
+                                }
+
+                                override fun onDataChange(p0: DataSnapshot) {
+                                    val currentStarCount = p0.child(Utils.CHILD_RECIPE_STAR_COUNT).value as Long?
+                                    currentStarCount?.let {
+                                        currentRecipeRef.child(Utils.CHILD_RECIPE_STAR_COUNT).setValue(it - 1)
+                                    }
+                                    Log.i("Nya", "Unstarred")
+                                }
+                            })
+                            view.text = "Star!"
+                        }
+                    }
+                })
+            }
+        }
     }
 
     private fun updateUI(user : FirebaseUser?) {
-        if (user != null) {
-            mUsername = user.displayName.toString()
-        }
-        Log.i("NYA", "$mUsername is logged in")
+
     }
 
     interface MainActivityListener {

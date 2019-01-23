@@ -13,11 +13,17 @@ import android.widget.Button
 import android.widget.TextView
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.IdpResponse
+import com.firebase.ui.auth.data.model.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 
 import com.mishenka.cookingstuff.R
 import com.mishenka.cookingstuff.activities.MainActivity
+import com.mishenka.cookingstuff.utils.Utils
 
 private const val ARG_PARAM1 = "param1"
 private const val ARG_PARAM2 = "param2"
@@ -108,8 +114,20 @@ class MeFragment : Fragment(), MainActivity.MainActivityListener {
             val response = IdpResponse.fromResultIntent(data)
 
             if (resultCode == Activity.RESULT_OK) {
-                val user = FirebaseAuth.getInstance().currentUser
-                updateUI(user)
+                val authUser = FirebaseAuth.getInstance().currentUser
+                val userRef = FirebaseDatabase.getInstance().reference.child(Utils.CHILD_USER).child(authUser!!.uid)
+                userRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                    override fun onCancelled(p0: DatabaseError) {
+                        throw p0.toException()
+                    }
+
+                    override fun onDataChange(p0: DataSnapshot) {
+                        if (!p0.exists()) {
+                            userRef.setValue(com.mishenka.cookingstuff.data.User())
+                        }
+                    }
+                })
+                updateUI(authUser)
             } else {
                 Log.i("NYA", response?.error?.errorCode.toString())
             }

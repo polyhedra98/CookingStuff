@@ -5,16 +5,19 @@ import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v7.widget.RecyclerView
 import android.view.*
+import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import com.bumptech.glide.Glide
 import com.firebase.ui.database.FirebaseRecyclerAdapter
 import com.firebase.ui.database.FirebaseRecyclerOptions
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import com.mishenka.cookingstuff.R
 import com.mishenka.cookingstuff.data.Recipe
 import com.mishenka.cookingstuff.utils.Utils
 import com.mishenka.cookingstuff.views.UpperRecipe
+import okhttp3.internal.Util
 
 private const val ARG_PARAM1 = "param1"
 private const val ARG_PARAM2 = "param2"
@@ -90,6 +93,24 @@ class HomeFragment : Fragment() {
                 holder.upperRecipe.setOnClickListener {
                     listener?.onRecyclerItemClicked(getItem(position).key)
                 }
+                val user = FirebaseAuth.getInstance().currentUser
+                var isStarred : Boolean? = false
+                user?.let { fbUser ->
+                    val starRef = FirebaseDatabase.getInstance().reference.child(Utils.CHILD_USER).child(fbUser.uid).child(Utils.CHILD_STARRED_POSTS).child(model.key!!)
+                    starRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                        override fun onCancelled(p0: DatabaseError) {
+                            throw p0.toException()
+                        }
+
+                        override fun onDataChange(p0: DataSnapshot) {
+                            isStarred = p0.value as Boolean?
+                            holder.bStar.text = if (isStarred != null && isStarred!!) "Starred!" else "Star!"
+                        }
+                    })
+                }
+                holder.bStar.setOnClickListener {
+                    listener?.onStarButtonClicked(getItem(position).key, it as Button)
+                }
             }
         }
         mFirebaseRecipeAdapter
@@ -163,10 +184,12 @@ class HomeFragment : Fragment() {
         val ivMainPicture = upperRecipe.findViewById<ImageView>(R.id.iv_upper_recipe_main)
 
         val tvWatchCount = recipeView.findViewById<TextView>(R.id.tv_watch_count)
+        val bStar = recipeView.findViewById<Button>(R.id.b_star)
     }
 
     interface HomeFragmentListener {
         fun onRecyclerItemClicked(recipeKey : String?)
+        fun onStarButtonClicked(recipeKey : String?, view : Button)
     }
 
     companion object {
