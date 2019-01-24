@@ -5,12 +5,12 @@
     android:layout_height="wrap_content"
     android:orientation="vertical">
 
-    <com.mishenka.cookingstuff.views.UpperRecipe
+    <com.mishenka.cookingstuff.views.UpperRecipeView
         android:id="@+id/ur_recipe"
         android:layout_width="match_parent"
         android:layout_height="wrap_content">
 
-    </com.mishenka.cookingstuff.views.UpperRecipe>
+    </com.mishenka.cookingstuff.views.UpperRecipeView>
 
     <LinearLayout
         android:layout_width="match_parent"

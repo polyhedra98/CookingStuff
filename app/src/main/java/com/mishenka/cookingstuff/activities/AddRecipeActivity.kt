@@ -5,10 +5,6 @@ import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v7.app.AlertDialog
 import android.view.View
-import android.widget.Button
-import android.widget.ImageView
-import android.widget.ListView
-import android.widget.TextView
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
@@ -18,6 +14,8 @@ import com.mishenka.cookingstuff.data.Step
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
+import android.view.ViewGroup
+import android.widget.*
 import com.bumptech.glide.Glide
 import com.google.android.gms.tasks.Continuation
 import com.google.android.gms.tasks.Task
@@ -27,14 +25,17 @@ import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageMetadata
 import com.google.firebase.storage.StorageReference
 import com.google.firebase.storage.UploadTask
+import com.mishenka.cookingstuff.data.Ingredient
 import com.mishenka.cookingstuff.data.Recipe
 import com.mishenka.cookingstuff.data.WholeRecipe
 import com.mishenka.cookingstuff.utils.Utils
+import com.mishenka.cookingstuff.views.IngredientView
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 
 
 class AddRecipeActivity : AppCompatActivity(), StepsAdapter.StepListener {
+    private val mIngredientsList : ArrayList<Ingredient> = arrayListOf(Ingredient(false), Ingredient(false), Ingredient(false))
     private val mStepsList : ArrayList<Step> = arrayListOf(Step(), Step(), Step())
 
     private lateinit var mDBRef : DatabaseReference
@@ -69,7 +70,17 @@ class AddRecipeActivity : AppCompatActivity(), StepsAdapter.StepListener {
             }
         }
 
+        val params = LinearLayout.LayoutParams (
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT
+        )
+        val vgIngredients = findViewById<ViewGroup>(R.id.insert_ingredients)
+        for (ingredient in mIngredientsList) {
+            vgIngredients.addView(IngredientView(ingredient, this), params)
+        }
+
         //TODO("UI seems buggy, list gets cut off")
+        //TODO("I now why, gonna get rid of ListView implementation later)
         val stepsList = findViewById<ListView>(R.id.lv_steps)
         stepsList.adapter = mStepsAdapter
 
@@ -78,6 +89,18 @@ class AddRecipeActivity : AppCompatActivity(), StepsAdapter.StepListener {
         addStepButton.setOnClickListener {
             mStepsList.add(Step())
             mStepsAdapter.notifyDataSetChanged()
+        }
+
+        val bAddSection = findViewById<Button>(R.id.b_add_section)
+        bAddSection.setOnClickListener {
+            mIngredientsList.add(Ingredient(true))
+            vgIngredients.addView(IngredientView(mIngredientsList.last(), this), params)
+        }
+
+        val bAddIngredient = findViewById<Button>(R.id.b_add_ingredient)
+        bAddIngredient.setOnClickListener {
+            mIngredientsList.add(Ingredient(false))
+            vgIngredients.addView(IngredientView(mIngredientsList.last(), this), params)
         }
 
         mSubmitButton = findViewById(R.id.b_add_recipe)
@@ -112,12 +135,14 @@ class AddRecipeActivity : AppCompatActivity(), StepsAdapter.StepListener {
                                 counter++
                             }
                         }
+                        val ingredientsList = mIngredientsList.filter { ingredient ->  ingredient.text != null && ingredient.text != ""}
+
                         mDBRef.child(Utils.CHILD_RECIPE).child(key).setValue(Recipe(key = key, name = recipeName, author = username,
                                 authorUID = user.uid, mainPicUri = mainPicUri)).addOnFailureListener {
                             throw it
                         }
                         mDBRef.child(Utils.CHILD_WHOLE_RECIPE).child(key).setValue(WholeRecipe(key = key, name = recipeName, author = username,
-                                authorUID = user.uid, mainPicUri = mainPicUri, stepsList = mStepsList)).addOnFailureListener {
+                                authorUID = user.uid, mainPicUri = mainPicUri, ingredientsList = ingredientsList, stepsList = mStepsList)).addOnFailureListener {
                             throw it
                         }
                     }

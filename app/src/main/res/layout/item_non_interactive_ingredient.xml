@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical">
+
+    <TextView
+        android:id="@+id/tv_non_int_separator"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:textColor="@color/fui_bgTwitter" />
+
+    <TextView
+        android:id="@+id/tv_non_int_ingredient"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" />
+</LinearLayout>

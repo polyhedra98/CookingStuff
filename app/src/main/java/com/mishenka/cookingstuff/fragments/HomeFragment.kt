@@ -16,8 +16,7 @@ import com.google.firebase.database.*
 import com.mishenka.cookingstuff.R
 import com.mishenka.cookingstuff.data.Recipe
 import com.mishenka.cookingstuff.utils.Utils
-import com.mishenka.cookingstuff.views.UpperRecipe
-import okhttp3.internal.Util
+import com.mishenka.cookingstuff.views.UpperRecipeView
 
 private const val ARG_PARAM1 = "param1"
 private const val ARG_PARAM2 = "param2"
@@ -72,6 +71,7 @@ class HomeFragment : Fragment() {
         mdbRecipesReference = FirebaseDatabase.getInstance().reference.child(Utils.CHILD_RECIPE)
         mQuery = mdbRecipesReference
         val options = FirebaseRecyclerOptions.Builder<Recipe>().setQuery(mQuery, Recipe::class.java).build()
+        //TODO("For some reason shows prev picture if no other is provided")
         mFirebaseRecipeAdapter = object : FirebaseRecyclerAdapter<Recipe, RecipeViewHolder>(options) {
             override fun onCreateViewHolder(p0: ViewGroup, p1: Int): RecipeViewHolder {
                 val view = LayoutInflater.from(p0.context)
@@ -85,7 +85,7 @@ class HomeFragment : Fragment() {
                 holder.tvRecipeName.text = model.name
                 holder.tvAuthorName.text = model.author
                 holder.tvWatchCount.text = "Read count: ${model.readCount}"
-                if (model.mainPicUri != "" && model.mainPicUri != null) {
+                if (model.mainPicUri != null && model.mainPicUri != "") {
                     Glide.with(holder.ivMainPicture.context)
                             .load(model.mainPicUri)
                             .into(holder.ivMainPicture)
@@ -178,7 +178,7 @@ class HomeFragment : Fragment() {
     }
 
     private class RecipeViewHolder(recipeView : View) : RecyclerView.ViewHolder(recipeView) {
-        val upperRecipe = recipeView.findViewById<UpperRecipe>(R.id.ur_recipe)
+        val upperRecipe = recipeView.findViewById<UpperRecipeView>(R.id.ur_recipe)
         val tvRecipeName = upperRecipe.findViewById<TextView>(R.id.tv_upper_recipe_name)
         val tvAuthorName = upperRecipe.findViewById<TextView>(R.id.tv_upper_author_name)
         val ivMainPicture = upperRecipe.findViewById<ImageView>(R.id.iv_upper_recipe_main)

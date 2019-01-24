@@ -12,6 +12,7 @@ object Utils {
     const val CHILD_RECIPE_STAR_COUNT = "starCount"
     const val WHOLE_RECIPE_NAME_CHILD = "name"
     const val WHOLE_RECIPE_MAIN_PIC_CHILD = "mainPicUri"
+    const val WHOLE_RECIPE_INGREDIENTS_LIST_CHILD = "ingredientsList"
     const val WHOLE_RECIPE_STEPS_LIST_CHILD = "stepsList"
     const val WHOLE_RECIPE_STEP_DESCRIPTION_CHILD = "stepDescription"
     const val WHOLE_RECIPE_STEP_FIRST_URL_CHILD = "firstPicUri"

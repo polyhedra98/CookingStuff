@@ -1,19 +1,26 @@
 package com.mishenka.cookingstuff.activities
 
-import android.app.Activity
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
+import android.view.View
+import android.view.ViewGroup
 import android.widget.ImageView
+import android.widget.LinearLayout
 import android.widget.ListView
 import android.widget.TextView
+import com.beust.klaxon.Klaxon
 import com.bumptech.glide.Glide
 import com.google.firebase.database.*
 import com.mishenka.cookingstuff.R
 import com.mishenka.cookingstuff.adapters.NonInteractiveStepsAdapter
+import com.mishenka.cookingstuff.data.Ingredient
 import com.mishenka.cookingstuff.data.Step
 import com.mishenka.cookingstuff.utils.Utils
+import com.mishenka.cookingstuff.views.IngredientView
+import com.mishenka.cookingstuff.views.NonInteractiveIngredientView
 import java.lang.ClassCastException
+import java.lang.Exception
 
 class DetailActivity : AppCompatActivity() {
     private var mRecipeKey : String? = null
@@ -51,30 +58,53 @@ class DetailActivity : AppCompatActivity() {
                 val lvStepsList = findViewById<ListView>(R.id.lv_detail_steps)
                 val stepListAdapter = NonInteractiveStepsAdapter(mContext, R.layout.item_non_interactive_step, mStepsList)
                 lvStepsList.adapter = stepListAdapter
+
+                val params = LinearLayout.LayoutParams (
+                        LinearLayout.LayoutParams.MATCH_PARENT,
+                        LinearLayout.LayoutParams.WRAP_CONTENT
+                )
                 try {
-                    val stepsList = p0.child(Utils.WHOLE_RECIPE_STEPS_LIST_CHILD).value as List<HashMap<String, String>>
-                    if (stepsList.isNotEmpty()) {
-                        for (step in stepsList) {
-                            val currentStep = Step()
-                            if (step.containsKey(Utils.WHOLE_RECIPE_STEP_DESCRIPTION_CHILD)) {
-                                currentStep.stepDescription = step[Utils.WHOLE_RECIPE_STEP_DESCRIPTION_CHILD]
+                    val stepsListNullable = p0.child(Utils.WHOLE_RECIPE_STEPS_LIST_CHILD).value
+                    stepsListNullable?.let {
+                        val stepsList = it as List<HashMap<String, String>>
+                        if (stepsList.isNotEmpty()) {
+                            for (step in stepsList) {
+                                val currentStep = Step()
+                                if (step.containsKey(Utils.WHOLE_RECIPE_STEP_DESCRIPTION_CHILD)) {
+                                    currentStep.stepDescription = step[Utils.WHOLE_RECIPE_STEP_DESCRIPTION_CHILD]
+                                }
+                                if (step.containsKey(Utils.WHOLE_RECIPE_STEP_FIRST_URL_CHILD) && !step[Utils.WHOLE_RECIPE_STEP_FIRST_URL_CHILD]!!.contains("content")) {
+                                    currentStep.firstPicUri = step[Utils.WHOLE_RECIPE_STEP_FIRST_URL_CHILD]
+                                }
+                                if (step.containsKey(Utils.WHOLE_RECIPE_STEP_SECOND_URL_CHILD) && !step[Utils.WHOLE_RECIPE_STEP_SECOND_URL_CHILD]!!.contains("content")) {
+                                    currentStep.secondPicUri = step[Utils.WHOLE_RECIPE_STEP_SECOND_URL_CHILD]
+                                }
+                                if (step.containsKey(Utils.WHOLE_RECIPE_STEP_THIRD_URL_CHILD) && !step[Utils.WHOLE_RECIPE_STEP_THIRD_URL_CHILD]!!.contains("content")) {
+                                    currentStep.thirdPicUri = step[Utils.WHOLE_RECIPE_STEP_THIRD_URL_CHILD]
+                                }
+                                mStepsList.add(currentStep)
                             }
-                            if (step.containsKey(Utils.WHOLE_RECIPE_STEP_FIRST_URL_CHILD) && !step[Utils.WHOLE_RECIPE_STEP_FIRST_URL_CHILD]!!.contains("content")) {
-                                currentStep.firstPicUri = step[Utils.WHOLE_RECIPE_STEP_FIRST_URL_CHILD]
-                            }
-                            if (step.containsKey(Utils.WHOLE_RECIPE_STEP_SECOND_URL_CHILD) && !step[Utils.WHOLE_RECIPE_STEP_SECOND_URL_CHILD]!!.contains("content")) {
-                                currentStep.secondPicUri = step[Utils.WHOLE_RECIPE_STEP_SECOND_URL_CHILD]
-                            }
-                            if (step.containsKey(Utils.WHOLE_RECIPE_STEP_THIRD_URL_CHILD) && !step[Utils.WHOLE_RECIPE_STEP_THIRD_URL_CHILD]!!.contains("content")) {
-                                currentStep.thirdPicUri = step[Utils.WHOLE_RECIPE_STEP_THIRD_URL_CHILD]
-                            }
-                            mStepsList.add(currentStep)
+                            stepListAdapter.notifyDataSetChanged()
                         }
-                        stepListAdapter.notifyDataSetChanged()
                     }
                 } catch (e : ClassCastException) {
-                    Log.i("NYA", e.toString())
-                    throw e
+                    e.printStackTrace()
+                }
+                try {
+                    val ingredientsListNullable = p0.child(Utils.WHOLE_RECIPE_INGREDIENTS_LIST_CHILD).value
+                    ingredientsListNullable?.let { ingredientsList ->
+                        val mapper = Klaxon()
+                        val ingredientsDict = mapper.parseArray<Ingredient>(mapper.toJsonString(ingredientsList))
+                        ingredientsDict?.let { dict ->
+                            val vgIngrediens = findViewById<ViewGroup>(R.id.detail_ingredients)
+                            for (ingredient in dict) {
+                                vgIngrediens.addView(NonInteractiveIngredientView(ingredient, this@DetailActivity), params)
+                            }
+                        }
+                    }
+
+                } catch (e : Exception) {
+                    e.printStackTrace()
                 }
             }
         }

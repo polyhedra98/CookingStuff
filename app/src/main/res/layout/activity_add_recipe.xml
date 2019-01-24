@@ -37,29 +37,48 @@
             android:hint="Recipe name"
             android:inputType="text" />
 
-        <LinearLayout
+        <TextView
+            android:id="@+id/textView_ingredients"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal">
+            android:text="Ingredients:" />
 
-            <TextView
-                android:id="@+id/textView2"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="bottom"
-                android:text="Describe steps:" />
+        <LinearLayout
+            android:id="@+id/insert_ingredients"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"></LinearLayout>
 
-            <Button
-                android:id="@+id/b_add_step"
-                android:layout_width="50dp"
-                android:layout_height="50dp"
-                android:text="+" />
-        </LinearLayout>
+        <Button
+            android:id="@+id/b_add_ingredient"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Add ingredient" />
+
+        <Button
+            android:id="@+id/b_add_section"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Add section" />
+
+        <TextView
+            android:id="@+id/textView2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom"
+            android:text="Describe steps:" />
+
 
         <ListView
             android:id="@+id/lv_steps"
             android:layout_width="match_parent"
             android:layout_height="250dp" />
+
+        <Button
+            android:id="@+id/b_add_step"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Add step" />
 
         <Button
             android:id="@+id/b_add_recipe"

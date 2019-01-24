@@ -136,7 +136,6 @@ class MainActivity : AppCompatActivity(), HomeFragment.HomeFragmentListener {
                         val currentPost = p0.child(Utils.CHILD_STARRED_POSTS).child(key).value as Boolean?
                         if (currentPost != null && currentPost) {
                             alreadyStarred = true
-                            Log.i("Nya", "Already starred")
                         }
                         if (!alreadyStarred) {
                             val currentStarRef = currentUserRef.child(Utils.CHILD_STARRED_POSTS).child(key)
@@ -155,10 +154,9 @@ class MainActivity : AppCompatActivity(), HomeFragment.HomeFragmentListener {
                                     } else {
                                         currentRecipeRef.child(Utils.CHILD_RECIPE_STAR_COUNT).setValue(1)
                                     }
-                                    Log.i("Nya", "Starred")
                                 }
                             })
-                            view.text = "Starred!"
+                            view.text = getString(R.string.starred)
                         } else {
                             val currentStarRef = currentUserRef.child(Utils.CHILD_STARRED_POSTS).child(key)
                             currentStarRef.setValue(null)
@@ -174,10 +172,9 @@ class MainActivity : AppCompatActivity(), HomeFragment.HomeFragmentListener {
                                     currentStarCount?.let {
                                         currentRecipeRef.child(Utils.CHILD_RECIPE_STAR_COUNT).setValue(it - 1)
                                     }
-                                    Log.i("Nya", "Unstarred")
                                 }
                             })
-                            view.text = "Star!"
+                            view.text = getString(R.string.star)
                         }
                     }
                 })
