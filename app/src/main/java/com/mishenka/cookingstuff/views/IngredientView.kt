@@ -6,6 +6,7 @@ import android.text.TextWatcher
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
+import android.widget.EditText
 import android.widget.LinearLayout
 import android.widget.TextView
 import com.mishenka.cookingstuff.R
@@ -27,11 +28,11 @@ class IngredientView : LinearLayout {
         super.onAttachedToWindow()
         mIngredient.isSeparator?.let { separator ->
             if (separator) {
-                val etName = findViewById<TextView>(R.id.et_ingredient_name)
+                val etName = findViewById<EditText>(R.id.et_ingredient_name)
                 etName.visibility = View.GONE
-                val etSeparator = findViewById<TextView>(R.id.et_ingredient_separator)
+                val etSeparator = findViewById<EditText>(R.id.et_ingredient_separator)
                 mIngredient.text?.let {
-                    etSeparator.text = it
+                    etSeparator.setText(it, TextView.BufferType.EDITABLE)
                 }
                 etSeparator.addTextChangedListener(object : TextWatcher {
                     override fun afterTextChanged(s: Editable?) {
@@ -47,11 +48,11 @@ class IngredientView : LinearLayout {
                     }
                 })
             } else {
-                val etSeparator = findViewById<TextView>(R.id.et_ingredient_separator)
+                val etSeparator = findViewById<EditText>(R.id.et_ingredient_separator)
                 etSeparator.visibility = View.GONE
-                val etName = findViewById<TextView>(R.id.et_ingredient_name)
+                val etName = findViewById<EditText>(R.id.et_ingredient_name)
                 mIngredient.text?.let {
-                    etName.text = it
+                    etName.setText(it, TextView.BufferType.EDITABLE)
                 }
                 etName.addTextChangedListener(object : TextWatcher {
                     override fun afterTextChanged(s: Editable?) {

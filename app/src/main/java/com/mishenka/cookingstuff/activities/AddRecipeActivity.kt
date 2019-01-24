@@ -9,7 +9,6 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
 import com.mishenka.cookingstuff.R
-import com.mishenka.cookingstuff.adapters.StepsAdapter
 import com.mishenka.cookingstuff.data.Step
 import android.content.Intent
 import android.net.Uri
@@ -28,19 +27,20 @@ import com.google.firebase.storage.UploadTask
 import com.mishenka.cookingstuff.data.Ingredient
 import com.mishenka.cookingstuff.data.Recipe
 import com.mishenka.cookingstuff.data.WholeRecipe
+import com.mishenka.cookingstuff.interfaces.StepListener
 import com.mishenka.cookingstuff.utils.Utils
 import com.mishenka.cookingstuff.views.IngredientView
+import com.mishenka.cookingstuff.views.StepView
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 
 
-class AddRecipeActivity : AppCompatActivity(), StepsAdapter.StepListener {
+class AddRecipeActivity : AppCompatActivity(), StepListener {
     private val mIngredientsList : ArrayList<Ingredient> = arrayListOf(Ingredient(false), Ingredient(false), Ingredient(false))
     private val mStepsList : ArrayList<Step> = arrayListOf(Step(), Step(), Step())
 
     private lateinit var mDBRef : DatabaseReference
     private lateinit var mStepsSRef : StorageReference
-    private lateinit var mStepsAdapter : StepsAdapter
 
     private lateinit var mSubmitButton : Button
 
@@ -61,7 +61,6 @@ class AddRecipeActivity : AppCompatActivity(), StepsAdapter.StepListener {
 
         mDBRef = FirebaseDatabase.getInstance().reference
         mStepsSRef = FirebaseStorage.getInstance().reference.child(Utils.CHILD_STEPS_PHOTOS)
-        mStepsAdapter = StepsAdapter(this, R.layout.item_step, mStepsList)
 
         val bMainPic = findViewById<Button>(R.id.b_main_picture)
         bMainPic.setOnClickListener {
@@ -78,17 +77,15 @@ class AddRecipeActivity : AppCompatActivity(), StepsAdapter.StepListener {
         for (ingredient in mIngredientsList) {
             vgIngredients.addView(IngredientView(ingredient, this), params)
         }
+        val vgSteps = findViewById<ViewGroup>(R.id.insert_steps)
+        for (step in mStepsList) {
+            vgSteps.addView(StepView(step, this), params)
+        }
 
-        //TODO("UI seems buggy, list gets cut off")
-        //TODO("I now why, gonna get rid of ListView implementation later)
-        val stepsList = findViewById<ListView>(R.id.lv_steps)
-        stepsList.adapter = mStepsAdapter
-
-        //TODO("Make it a nice little '+' on the right side")
         val addStepButton = findViewById<Button>(R.id.b_add_step)
         addStepButton.setOnClickListener {
             mStepsList.add(Step())
-            mStepsAdapter.notifyDataSetChanged()
+            vgSteps.addView(StepView(mStepsList.last(), this), params)
         }
 
         val bAddSection = findViewById<Button>(R.id.b_add_section)
