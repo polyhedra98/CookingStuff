@@ -1,8 +1,6 @@
 package com.mishenka.cookingstuff.views
 
 import android.content.Context
-import android.text.Editable
-import android.text.TextWatcher
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
