@@ -22,6 +22,11 @@
         </activity>
         <activity android:name=".activities.AddRecipeActivity" />
         <activity android:name=".activities.DetailActivity"></activity>
+
+        <service
+            android:name=".services.UploadService"
+            android:permission="android.permission.BIND_JOB_SERVICE"
+            android:exported="true"/>
     </application>
 
 </manifest>
