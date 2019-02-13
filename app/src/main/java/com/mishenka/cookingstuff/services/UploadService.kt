@@ -16,18 +16,26 @@ import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageMetadata
 import com.google.firebase.storage.UploadTask
 import com.mishenka.cookingstuff.data.*
+import com.mishenka.cookingstuff.utils.MainApplication
 import com.mishenka.cookingstuff.utils.Utils
+import com.mishenka.cookingstuff.utils.database.CookingDatabase
+import com.mishenka.cookingstuff.utils.database.PersistableParcelable
+import kotlinx.coroutines.Deferred
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.runBlocking
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 
 @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
 class UploadService : JobService() {
-    private lateinit var mName : String
-    private lateinit var mAuthorUID : String
-    private var mAuthor : String? = null
-    private var mMainPicUri : String? = null
-    private var mIngredientsList : List<Ingredient>? = null
-    private var mStepsList : List<Step>? = null
+    private lateinit var mDeferred: Deferred<Unit>
+    private lateinit var mName: String
+    private lateinit var mAuthorUID: String
+    private var mAuthor: String? = null
+    private var mMainPicUri: String? = null
+    private var mIngredientsList: List<Ingredient>? = null
+    private var mStepsList: List<Step>? = null
 
     override fun onCreate() {
         super.onCreate()
@@ -40,19 +48,25 @@ class UploadService : JobService() {
     }
 
     override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
-        val uploadData = intent.getParcelableExtra<UploadData>(Utils.UPLOAD_DATA_KEY)!!
-        mName = uploadData.name
-        mAuthorUID = uploadData.authorUID
-        mAuthor = uploadData.author
-        mMainPicUri = uploadData.mainPicUri
-        mIngredientsList = uploadData.ingredientsList
-        mStepsList = uploadData.stepsList
+        val uploadDataId = intent.getStringExtra(Utils.UPLOAD_DATA_KEY)
+        val db = CookingDatabase.getInstance(MainApplication.applicationContext())
+        val persistableParcelable = PersistableParcelable<UploadData>(db!!)
+        mDeferred = GlobalScope.async {
+            val uploadData = persistableParcelable.load(uploadDataId, UploadData.CREATOR)!!
+            mName = uploadData.name
+            mAuthorUID = uploadData.authorUID
+            mAuthor = uploadData.author
+            mMainPicUri = uploadData.mainPicUri
+            mIngredientsList = uploadData.ingredientsList
+            mStepsList = uploadData.stepsList
+        }
         return Service.START_REDELIVER_INTENT
     }
 
     override fun onStartJob(params: JobParameters?): Boolean {
         Log.i("NYA_serv", "Started uploading")
-        Tasks.call {
+        GlobalScope.async {
+            mDeferred.join()
             val mainPicTask = Tasks.call(sExecutor, MainPicCallable())
             val stepPicTask = Tasks.call(sExecutor, StepsCallable())
             Tasks.whenAll(mainPicTask, stepPicTask).continueWith {
@@ -63,7 +77,6 @@ class UploadService : JobService() {
 
                 if (mStepsList != null && stepPicUris != null) {
                     if (mStepsList!!.size <= stepPicUris.size) {
-                        //TODO("Needs further inspection)
                         var counter = 0
                         var innerCounter = 0
                         while (counter < mStepsList!!.size) {
@@ -102,6 +115,7 @@ class UploadService : JobService() {
                 }
                 Log.i("NYA_serv", "Finished writing whole recipe")
             }.addOnCompleteListener { task ->
+                CookingDatabase.destroyInstance()
                 if (task.isSuccessful) {
                     Log.i("NYA_serv", "Uploading finished successfully")
                     jobFinished(params, false)

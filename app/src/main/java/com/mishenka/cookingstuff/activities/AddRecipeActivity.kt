@@ -16,7 +16,8 @@ import com.mishenka.cookingstuff.R
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
-import android.os.PersistableBundle
+import android.os.Handler
+import android.support.annotation.RequiresApi
 import android.util.Log
 import android.view.ViewGroup
 import android.widget.*
@@ -26,30 +27,37 @@ import com.google.firebase.storage.StorageReference
 import com.mishenka.cookingstuff.data.*
 import com.mishenka.cookingstuff.interfaces.StepListener
 import com.mishenka.cookingstuff.services.UploadService
+import com.mishenka.cookingstuff.utils.MainApplication
 import com.mishenka.cookingstuff.utils.Utils
+import com.mishenka.cookingstuff.utils.database.CookingDatabase
+import com.mishenka.cookingstuff.utils.database.DbWorkerThread
+import com.mishenka.cookingstuff.utils.database.PersistableParcelable
 import com.mishenka.cookingstuff.views.IngredientView
 import com.mishenka.cookingstuff.views.StepView
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
 
 
 class AddRecipeActivity : AppCompatActivity(), StepListener {
-    private val mIngredientsList : ArrayList<Ingredient> = arrayListOf(Ingredient(false), Ingredient(false), Ingredient(false))
-    private val mStepsList : ArrayList<Step> = arrayListOf(Step(), Step(), Step())
+    private val mIngredientsList: ArrayList<Ingredient> = arrayListOf(Ingredient(false), Ingredient(false), Ingredient(false))
+    private val mStepsList: ArrayList<Step> = arrayListOf(Step(), Step(), Step())
 
-    private lateinit var mDBRef : DatabaseReference
-    private lateinit var mStepsSRef : StorageReference
-
+    private lateinit var mDBRef: DatabaseReference
+    private lateinit var mStepsSRef: StorageReference
     private lateinit var mSubmitButton : Button
+    private lateinit var mDbWorkerThread: DbWorkerThread
 
-    private var mMainPicUri : Uri? = null
-
-    private var mCurrentStep : Step? = null
-    private var mCurrentButton : View? = null
-    private var mCurrentParentView : View? = null
+    private var mLocalDb: CookingDatabase? = null
+    private var mMainPicUri: Uri? = null
+    private var mCurrentStep: Step? = null
+    private var mCurrentButton: View? = null
+    private var mCurrentParentView: View? = null
 
     private val MAIN_GALLERY = 1
     private val MAIN_CAMERA = 2
     private val STEP_GALLERY = 3
     private val STEP_CAMERA = 4
+    private val mUploadHandler = Handler()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,6 +65,9 @@ class AddRecipeActivity : AppCompatActivity(), StepListener {
 
         mDBRef = FirebaseDatabase.getInstance().reference
         mStepsSRef = FirebaseStorage.getInstance().reference.child(Utils.CHILD_STEPS_PHOTOS)
+
+        mDbWorkerThread = DbWorkerThread("dbWorkerThread")
+        mDbWorkerThread.start()
 
         val bMainPic = findViewById<Button>(R.id.b_main_picture)
         bMainPic.setOnClickListener {
@@ -101,40 +112,65 @@ class AddRecipeActivity : AppCompatActivity(), StepListener {
             val recipeName = findViewById<TextView>(R.id.et_recipe_name).text.toString()
 
             if (!recipeName.isEmpty()) {
-                val user = FirebaseAuth.getInstance().currentUser!!
-                val username = user.displayName
-                val userID = user.uid
-                val uploadData = UploadData(name = recipeName, authorUID = userID, author = username,
-                        mainPicUri = mMainPicUri?.toString(), ingredientsList = mIngredientsList, stepsList = mStepsList)
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-                    Log.i("NYA_serv", "SDK VER ge than Lollipop")
-                    val startServiceIntent = Intent(this, UploadService::class.java)
-                    startServiceIntent.putExtra(Utils.UPLOAD_DATA_KEY, uploadData)
-                    startService(startServiceIntent)
-                    val componentName = ComponentName(this, UploadService::class.java)
-                    val jobInfo = JobInfo.Builder(Utils.UPLOAD_SERVICE_ID, componentName)
-                            .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
-                            .build()
-                    val jobScheduler = getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
-                    val resultCode = jobScheduler.schedule(jobInfo)
-                    if (resultCode == JobScheduler.RESULT_SUCCESS) {
-                        Log.i("NYA_serv", "Job scheduled!")
-                    } else {
-                        Log.i("NYA_serv", "Job not scheduled..")
-                    }
-                } else {
-                    Log.i("NYA_serv", "SDK VER l than Lollipop")
-
-
-                }
+                uploadToServer(recipeName)
                 finish()
             }
         }
     }
 
-    override fun onStop() {
+    private fun uploadToServer(recipeName: String) {
+        val user = FirebaseAuth.getInstance().currentUser!!
+        val username = user.displayName
+        val userID = user.uid
+        mLocalDb = CookingDatabase.getInstance(MainApplication.applicationContext())
+        val persistableParcelable = PersistableParcelable<UploadData>(mLocalDb!!)
+        val uploadData = UploadData(name = recipeName, authorUID = userID, author = username,
+                mainPicUri = mMainPicUri?.toString(), ingredientsList = mIngredientsList, stepsList = mStepsList)
+        val dataId = recipeName + System.currentTimeMillis()
+        GlobalScope.async {
+            persistableParcelable.save(dataId, uploadData)
+            trySchedulingJob(dataId)
+        }
+    }
+
+    @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+    private fun scheduleUploadJob(dataId: String) {
+        Log.i("NYA_serv", "SDK VER ge than Lollipop")
+        val startServiceIntent = Intent(this, UploadService::class.java)
+        startServiceIntent.putExtra(Utils.UPLOAD_DATA_KEY, dataId)
+        startService(startServiceIntent)
+        val componentName = ComponentName(this, UploadService::class.java)
+        val jobInfo = JobInfo.Builder(Utils.UPLOAD_SERVICE_ID, componentName)
+                .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
+                .build()
+        val jobScheduler = getSystemService(Context.JOB_SCHEDULER_SERVICE) as JobScheduler
+        val resultCode = jobScheduler.schedule(jobInfo)
+        if (resultCode == JobScheduler.RESULT_SUCCESS) {
+            Log.i("NYA_serv", "Job scheduled!")
+        } else {
+            Log.i("NYA_serv", "Job not scheduled..")
+        }
+        stopService()
+        mDbWorkerThread.quit()
+        CookingDatabase.destroyInstance()
+    }
+
+    private fun supportScheduleUploadJob(dataId: String) {
+        Log.i("NYA_serv", "SDK VER l than Lollipop")
+
+    }
+
+    private fun trySchedulingJob(dataId: String) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            scheduleUploadJob(dataId)
+        } else {
+            supportScheduleUploadJob(dataId)
+        }
+    }
+
+    //TODO("Stop service from support as well")
+    private fun stopService() {
         stopService(Intent(this, UploadService::class.java))
-        super.onStop()
     }
 
     override fun onStepPicButtonClicked(v: View?, pv : View?, s : Step) {

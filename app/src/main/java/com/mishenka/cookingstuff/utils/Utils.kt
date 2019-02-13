@@ -15,6 +15,12 @@ object Utils {
     const val IMAGE_CONTENT_TYPE = "image/jpg"
 
     //db
+    const val DB_NAME = "cooking_database"
+    const val DB_UPLOAD_DATA_TABLE = "upload_data_table"
+    const val DB_UPLOAD_DATA_ID = "id"
+    const val DB_UPLOAD_DATA_CREATION = "creation_timestamp"
+    const val DB_UPLOAD_DATA_EXPIRATION = "expiration_timestamp"
+    const val DB_UPLOAD_DATA_DATA = "data"
     const val CHILD_RECIPE = "recipes"
     const val CHILD_WHOLE_RECIPE = "whole_recipes"
     const val CHILD_USER = "users"
