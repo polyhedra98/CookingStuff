@@ -9,14 +9,14 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import com.bumptech.glide.Glide
 import com.mishenka.cookingstuff.R
-import com.mishenka.cookingstuff.data.Step
+import com.mishenka.cookingstuff.data.NonParcelableStep
 
 class NonInteractiveStepView : LinearLayout {
-    private val mStep: Step
+    private val mStep: NonParcelableStep
 
-    constructor(step : Step, context: Context?) : super(context) { mStep = step }
-    constructor(step: Step, context: Context?, attrs: AttributeSet?) : super(context, attrs) { mStep = step }
-    constructor(step: Step, context: Context?, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs,
+    constructor(step : NonParcelableStep, context: Context?) : super(context) { mStep = step }
+    constructor(step: NonParcelableStep, context: Context?, attrs: AttributeSet?) : super(context, attrs) { mStep = step }
+    constructor(step: NonParcelableStep, context: Context?, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs,
             defStyleAttr) { mStep = step }
 
     init {

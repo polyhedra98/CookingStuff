@@ -2,6 +2,7 @@ package com.mishenka.cookingstuff.activities
 
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -10,8 +11,8 @@ import com.beust.klaxon.Klaxon
 import com.bumptech.glide.Glide
 import com.google.firebase.database.*
 import com.mishenka.cookingstuff.R
-import com.mishenka.cookingstuff.data.Ingredient
-import com.mishenka.cookingstuff.data.Step
+import com.mishenka.cookingstuff.data.NonParcelableIngredient
+import com.mishenka.cookingstuff.data.NonParcelableStep
 import com.mishenka.cookingstuff.utils.Utils
 import com.mishenka.cookingstuff.views.NonInteractiveIngredientView
 import com.mishenka.cookingstuff.views.NonInteractiveStepView
@@ -52,35 +53,40 @@ class DetailActivity : AppCompatActivity() {
                         LinearLayout.LayoutParams.WRAP_CONTENT
                 )
                 try {
+                //TODO("Doesn't work with D1 null D3. Cannot convert null.")
                     val stepsListNullable = p0.child(Utils.WHOLE_RECIPE_STEPS_LIST_CHILD).value
                     stepsListNullable?.let { stepsList ->
                         val mapper = Klaxon()
-                        val stepsDict = mapper.parseArray<Step>(mapper.toJsonString(stepsList))
+                        val stepsDict = mapper.parseArray<NonParcelableStep?>(mapper.toJsonString(stepsList))
                         stepsDict?.let { dict ->
                             val vgSteps = findViewById<ViewGroup>(R.id.detail_steps)
                             for (step in dict) {
-                                vgSteps.addView(NonInteractiveStepView(step, this@DetailActivity), params)
+                                step?.let {
+                                    vgSteps.addView(NonInteractiveStepView(step, this@DetailActivity), params)
+                                }
                             }
                         }
                     }
                 } catch (e : Exception) {
-                    e.printStackTrace()
+                    throw e
                 }
                 try {
                     val ingredientsListNullable = p0.child(Utils.WHOLE_RECIPE_INGREDIENTS_LIST_CHILD).value
                     ingredientsListNullable?.let { ingredientsList ->
                         val mapper = Klaxon()
-                        val ingredientsDict = mapper.parseArray<Ingredient>(mapper.toJsonString(ingredientsList))
+                        val ingredientsDict = mapper.parseArray<NonParcelableIngredient?>(mapper.toJsonString(ingredientsList))
                         ingredientsDict?.let { dict ->
-                            val vgIngrediens = findViewById<ViewGroup>(R.id.detail_ingredients)
+                            val vgIngredients = findViewById<ViewGroup>(R.id.detail_ingredients)
                             for (ingredient in dict) {
-                                vgIngrediens.addView(NonInteractiveIngredientView(ingredient, this@DetailActivity), params)
+                                ingredient?.let {
+                                    vgIngredients.addView(NonInteractiveIngredientView(ingredient, this@DetailActivity), params)
+                                }
                             }
                         }
                     }
 
                 } catch (e : Exception) {
-                    e.printStackTrace()
+                    throw e
                 }
             }
         }

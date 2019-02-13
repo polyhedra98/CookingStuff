@@ -158,7 +158,7 @@ class AddRecipeActivity : AppCompatActivity(), StepListener {
         CookingDatabase.destroyInstance()
     }
 
-    //TODO("Doesn't work. Service destruction logs occur earlier than SDK VER l than Lollipop")
+    //TODO("Doesn't work.")
     private fun supportScheduleUploadJob(dataId: String) {
         Log.i("NYA_serv", "SDK VER l than Lollipop")
         val dispatcher = FirebaseJobDispatcher(GooglePlayDriver(MainApplication.applicationContext()))

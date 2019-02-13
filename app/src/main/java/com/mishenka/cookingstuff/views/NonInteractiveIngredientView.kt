@@ -8,13 +8,14 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import com.mishenka.cookingstuff.R
 import com.mishenka.cookingstuff.data.Ingredient
+import com.mishenka.cookingstuff.data.NonParcelableIngredient
 
 class NonInteractiveIngredientView : LinearLayout {
-    private val mIngredient: Ingredient
+    private val mIngredient: NonParcelableIngredient
 
-    constructor(ingredient: Ingredient, context: Context?) : super(context) { mIngredient = ingredient }
-    constructor(ingredient: Ingredient, context: Context?, attrs: AttributeSet?) : super(context, attrs) { mIngredient = ingredient }
-    constructor(ingredient: Ingredient, context: Context?, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs,
+    constructor(ingredient: NonParcelableIngredient, context: Context?) : super(context) { mIngredient = ingredient }
+    constructor(ingredient: NonParcelableIngredient, context: Context?, attrs: AttributeSet?) : super(context, attrs) { mIngredient = ingredient }
+    constructor(ingredient: NonParcelableIngredient, context: Context?, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs,
             defStyleAttr) { mIngredient = ingredient }
 
     init {
