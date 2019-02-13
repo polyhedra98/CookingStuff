@@ -1,9 +1,9 @@
 package com.mishenka.cookingstuff.utils
 
-import android.app.Application
 import android.content.Context
+import android.support.multidex.MultiDexApplication
 
-class MainApplication : Application() {
+class MainApplication : MultiDexApplication() {
     init {
         instance = this
     }

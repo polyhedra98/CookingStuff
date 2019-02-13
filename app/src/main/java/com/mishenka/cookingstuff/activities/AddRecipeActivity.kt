@@ -16,16 +16,20 @@ import com.mishenka.cookingstuff.R
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
-import android.os.Handler
 import android.support.annotation.RequiresApi
 import android.util.Log
 import android.view.ViewGroup
 import android.widget.*
 import com.bumptech.glide.Glide
+import com.firebase.jobdispatcher.Constraint
+import com.firebase.jobdispatcher.FirebaseJobDispatcher
+import com.firebase.jobdispatcher.GooglePlayDriver
+import com.firebase.jobdispatcher.RetryStrategy
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.mishenka.cookingstuff.data.*
 import com.mishenka.cookingstuff.interfaces.StepListener
+import com.mishenka.cookingstuff.services.SupportUploadService
 import com.mishenka.cookingstuff.services.UploadService
 import com.mishenka.cookingstuff.utils.MainApplication
 import com.mishenka.cookingstuff.utils.Utils
@@ -57,7 +61,6 @@ class AddRecipeActivity : AppCompatActivity(), StepListener {
     private val MAIN_CAMERA = 2
     private val STEP_GALLERY = 3
     private val STEP_CAMERA = 4
-    private val mUploadHandler = Handler()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -155,9 +158,26 @@ class AddRecipeActivity : AppCompatActivity(), StepListener {
         CookingDatabase.destroyInstance()
     }
 
+    //TODO("Doesn't work. Service destruction logs occur earlier than SDK VER l than Lollipop")
     private fun supportScheduleUploadJob(dataId: String) {
         Log.i("NYA_serv", "SDK VER l than Lollipop")
-
+        val dispatcher = FirebaseJobDispatcher(GooglePlayDriver(MainApplication.applicationContext()))
+        val bundle = Bundle()
+        bundle.putString(Utils.UPLOAD_DATA_KEY, dataId)
+        val uploadJob = dispatcher.newJobBuilder()
+                .setService(SupportUploadService::class.java)
+                .setTag(Utils.UPLOAD_SERVICE_TAG)
+                .setConstraints(Constraint.ON_ANY_NETWORK)
+                .setRecurring(true)
+                .setRetryStrategy(RetryStrategy.DEFAULT_EXPONENTIAL)
+                .setExtras(bundle)
+                .build()
+        val resultCode = dispatcher.schedule(uploadJob)
+        if (resultCode == JobScheduler.RESULT_SUCCESS) {
+            Log.i("NYA_serv", "Support job scheduled")
+        } else {
+            Log.i("NYA_serv", "Support job not scheduled")
+        }
     }
 
     private fun trySchedulingJob(dataId: String) {
@@ -168,7 +188,6 @@ class AddRecipeActivity : AppCompatActivity(), StepListener {
         }
     }
 
-    //TODO("Stop service from support as well")
     private fun stopService() {
         stopService(Intent(this, UploadService::class.java))
     }
