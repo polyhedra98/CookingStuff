@@ -35,6 +35,10 @@
                 <action android:name="com.firebase.jobdispatcher.ACTION_EXECUTE"/>
             </intent-filter>
         </service>
+        <service
+            android:name=".services.TempSupportUploadService"
+            android:exported="false"
+            />
     </application>
 
 </manifest>

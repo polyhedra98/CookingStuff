@@ -76,18 +76,13 @@ class UploadService : JobService() {
                 val stepPicUris = stepPicTask.result
 
                 if (mStepsList != null && stepPicUris != null) {
-                    if (mStepsList!!.size <= stepPicUris.size) {
-                        var counter = 0
-                        var innerCounter = 0
-                        while (counter < mStepsList!!.size) {
-                            mStepsList!![counter].firstPicUri = if (mStepsList!![counter].firstPicUri != null) stepPicUris[innerCounter++] else null
-                            mStepsList!![counter].secondPicUri = if (mStepsList!![counter].secondPicUri != null) stepPicUris[innerCounter++] else null
-                            mStepsList!![counter].thirdPicUri = if (mStepsList!![counter].thirdPicUri != null) stepPicUris[innerCounter++] else null
-                            counter++
-                        }
-                    } else {
-                        Log.i("NYA_serv", "Something wrong with steps list")
-                        mStepsList = null
+                    var counter = 0
+                    var innerCounter = 0
+                    while (counter < mStepsList!!.size) {
+                        mStepsList!![counter].firstPicUri = if (mStepsList!![counter].firstPicUri != null) stepPicUris[innerCounter++] else null
+                        mStepsList!![counter].secondPicUri = if (mStepsList!![counter].secondPicUri != null) stepPicUris[innerCounter++] else null
+                        mStepsList!![counter].thirdPicUri = if (mStepsList!![counter].thirdPicUri != null) stepPicUris[innerCounter++] else null
+                        counter++
                     }
                 }
                 var ingredientsList : List<Ingredient>? = null

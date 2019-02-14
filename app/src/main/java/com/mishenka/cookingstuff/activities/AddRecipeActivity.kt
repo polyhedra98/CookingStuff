@@ -30,6 +30,7 @@ import com.google.firebase.storage.StorageReference
 import com.mishenka.cookingstuff.data.*
 import com.mishenka.cookingstuff.interfaces.StepListener
 import com.mishenka.cookingstuff.services.SupportUploadService
+import com.mishenka.cookingstuff.services.TempSupportUploadService
 import com.mishenka.cookingstuff.services.UploadService
 import com.mishenka.cookingstuff.utils.MainApplication
 import com.mishenka.cookingstuff.utils.Utils
@@ -158,9 +159,10 @@ class AddRecipeActivity : AppCompatActivity(), StepListener {
         CookingDatabase.destroyInstance()
     }
 
-    //TODO("Doesn't work.")
     private fun supportScheduleUploadJob(dataId: String) {
         Log.i("NYA_serv", "SDK VER l than Lollipop")
+        //TODO("Doesn't work...")
+        /*
         val dispatcher = FirebaseJobDispatcher(GooglePlayDriver(MainApplication.applicationContext()))
         val bundle = Bundle()
         bundle.putString(Utils.UPLOAD_DATA_KEY, dataId)
@@ -177,7 +179,10 @@ class AddRecipeActivity : AppCompatActivity(), StepListener {
             Log.i("NYA_serv", "Support job scheduled")
         } else {
             Log.i("NYA_serv", "Support job not scheduled")
-        }
+        }*/
+        val intent = Intent(this, TempSupportUploadService::class.java)
+        intent.putExtra(Utils.UPLOAD_DATA_KEY, dataId)
+        startService(intent)
     }
 
     private fun trySchedulingJob(dataId: String) {

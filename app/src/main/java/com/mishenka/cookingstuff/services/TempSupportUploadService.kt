@@ -1,9 +1,9 @@
 package com.mishenka.cookingstuff.services
 
+import android.app.IntentService
+import android.content.Intent
 import android.net.Uri
 import android.util.Log
-import com.firebase.jobdispatcher.JobParameters
-import com.firebase.jobdispatcher.JobService
 import com.google.android.gms.tasks.Continuation
 import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.Tasks
@@ -22,7 +22,7 @@ import kotlinx.coroutines.async
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 
-class SupportUploadService : JobService() {
+public class TempSupportUploadService : IntentService(TempSupportUploadService::class.simpleName) {
     private lateinit var mDeferred: Deferred<Unit>
     private lateinit var mName: String
     private lateinit var mAuthorUID: String
@@ -31,106 +31,78 @@ class SupportUploadService : JobService() {
     private var mIngredientsList: List<Ingredient>? = null
     private var mStepsList: List<Step>? = null
 
-    override fun onCreate() {
-        super.onCreate()
-        Log.i("NYA_serv", "Support service created")
-    }
+    override fun onHandleIntent(nullableIntent: Intent?) {
+        nullableIntent?.let { intent ->
+            val dataId = intent.getStringExtra(Utils.UPLOAD_DATA_KEY) ?: return
+            val db = CookingDatabase.getInstance(MainApplication.applicationContext())
+            val persistableParcelable = PersistableParcelable<UploadData>(db!!)
+            mDeferred = GlobalScope.async {
+                Log.i("NYA_serv", "Started loading data from db")
+                val uploadData = persistableParcelable.load(dataId, UploadData.CREATOR)!!
+                Log.i("NYA_serv", "Finished loading data from db")
+                mName = uploadData.name
+                mAuthorUID = uploadData.authorUID
+                mAuthor = uploadData.author
+                mMainPicUri = uploadData.mainPicUri
+                mIngredientsList = uploadData.ingredientsList
+                mStepsList = uploadData.stepsList
+            }
+            GlobalScope.async {
+                Log.i("NYA_serv", "Waiting to join deferred")
+                mDeferred.join()
+                Log.i("NYA_serv", "Joined deferred")
+                val mainPicTask = Tasks.call(sExecutor, MainPicCallable())
+                val stepPicTask = Tasks.call(sExecutor, StepsCallable())
+                Tasks.whenAll(mainPicTask, stepPicTask).continueWith {
+                    val dbRef = FirebaseDatabase.getInstance().reference
+                    val key = dbRef.child(Utils.CHILD_RECIPE).push().key!!
+                    val mainPicUri = mainPicTask.result
+                    val stepPicUris = stepPicTask.result
 
-    override fun onDestroy() {
-        super.onDestroy()
-        Log.i("NYA_serv", "Support service destroyed")
-    }
-
-    override fun onStartJob(job: JobParameters?): Boolean {
-        val extra = job?.extras
-        if (extra == null) {
-            Log.i("NYA_serv", "Null extra")
-            return false
-        }
-        Log.i("NYA_serv", "Starting job from support server")
-        val dataId = extra.getString(Utils.UPLOAD_DATA_KEY)
-        if (dataId == null) {
-            Log.i("NYA_serv", "Null ID")
-            return false
-        }
-        val db = CookingDatabase.getInstance(MainApplication.applicationContext())
-        val persistableParcelable = PersistableParcelable<UploadData>(db!!)
-        mDeferred = GlobalScope.async {
-            Log.i("NYA_serv", "Started loading data from db")
-            val uploadData = persistableParcelable.load(dataId, UploadData.CREATOR)!!
-            Log.i("NYA_serv", "Finished loading data from db")
-            mName = uploadData.name
-            mAuthorUID = uploadData.authorUID
-            mAuthor = uploadData.author
-            mMainPicUri = uploadData.mainPicUri
-            mIngredientsList = uploadData.ingredientsList
-            mStepsList = uploadData.stepsList
-        }
-        GlobalScope.async {
-            Log.i("NYA_serv", "Waiting to join deferred")
-            mDeferred.join()
-            Log.i("NYA_serv", "Joined deferred")
-            val mainPicTask = Tasks.call(sExecutor, MainPicCallable())
-            val stepPicTask = Tasks.call(sExecutor, StepsCallable())
-            Tasks.whenAll(mainPicTask, stepPicTask).continueWith {
-                val dbRef = FirebaseDatabase.getInstance().reference
-                val key = dbRef.child(Utils.CHILD_RECIPE).push().key!!
-                val mainPicUri = mainPicTask.result
-                val stepPicUris = stepPicTask.result
-
-                if (mStepsList != null && stepPicUris != null) {
-                    var counter = 0
-                    var innerCounter = 0
-                    while (counter < mStepsList!!.size) {
-                        mStepsList!![counter].firstPicUri = if (mStepsList!![counter].firstPicUri != null) stepPicUris[innerCounter++] else null
-                        mStepsList!![counter].secondPicUri = if (mStepsList!![counter].secondPicUri != null) stepPicUris[innerCounter++] else null
-                        mStepsList!![counter].thirdPicUri = if (mStepsList!![counter].thirdPicUri != null) stepPicUris[innerCounter++] else null
-                        counter++
+                    if (mStepsList != null && stepPicUris != null) {
+                        var counter = 0
+                        var innerCounter = 0
+                        while (counter < mStepsList!!.size) {
+                            mStepsList!![counter].firstPicUri = if (mStepsList!![counter].firstPicUri != null) stepPicUris[innerCounter++] else null
+                            mStepsList!![counter].secondPicUri = if (mStepsList!![counter].secondPicUri != null) stepPicUris[innerCounter++] else null
+                            mStepsList!![counter].thirdPicUri = if (mStepsList!![counter].thirdPicUri != null) stepPicUris[innerCounter++] else null
+                            counter++
+                        }
                     }
-                }
-                var ingredientsList : List<Ingredient>? = null
-                if (mIngredientsList != null) {
-                    ingredientsList = mIngredientsList!!.filter { ingredient -> !ingredient.text.isNullOrEmpty() }
-                }
-                Log.i("NYA_serv", "Writing")
-                Log.i("NYA_serv", "Writing key = $key")
-                Log.i("NYA_serv", "Writing name = $mName")
-                Log.i("NYA_serv", "Writing author = $mAuthor")
-                Log.i("NYA_serv", "Writing authorUID = $mAuthorUID")
-                Log.i("NYA_serv", "Writing mainPicUri = $mainPicUri")
-                Log.i("NYA_serv", "Writing key = $key, name = $mName, author = $mAuthor, authorUID = $mAuthorUID, mainPicUri = $mainPicUri")
-                dbRef.child(Utils.CHILD_RECIPE).child(key).setValue(Recipe(key = key, name = mName, author = mAuthor,
-                        authorUID = mAuthorUID, mainPicUri = mainPicUri)).addOnFailureListener { e ->
-                    Log.i("NYA_serv", "Error writing to recipes")
-                    throw e
-                }
-                Log.i("NYA_serv", "Finished writing recipe")
-                Log.i("NYA_serv", "Writing key = $key, name = $mName, author = $mAuthor, authorUID = $mAuthorUID, mainPicUri = $mainPicUri, ingredientsList = $ingredientsList, stepList = $mStepsList")
-                dbRef.child(Utils.CHILD_WHOLE_RECIPE).child(key).setValue(WholeRecipe(key = key, name = mName, authorUID = mAuthorUID,
-                        author = mAuthor, mainPicUri = mainPicUri, ingredientsList = ingredientsList, stepsList = mStepsList)).addOnFailureListener { e ->
-                    Log.i("NYA_serv", "Error writing to whole recipes")
-                    throw e
-                }
-                Log.i("NYA_serv", "Finished writing whole recipe")
-            }.addOnCompleteListener { task ->
-                CookingDatabase.destroyInstance()
-                if (task.isSuccessful) {
-                    Log.i("NYA_serv", "Uploading finished successfully")
-                    jobFinished(job, false)
-                } else {
-                    Log.i("NYA_serv", "Uploading finished with an error")
-                    jobFinished(job, true)
+                    var ingredientsList : List<Ingredient>? = null
+                    if (mIngredientsList != null) {
+                        ingredientsList = mIngredientsList!!.filter { ingredient -> !ingredient.text.isNullOrEmpty() }
+                    }
+                    Log.i("NYA_serv", "Writing")
+                    Log.i("NYA_serv", "Writing key = $key")
+                    Log.i("NYA_serv", "Writing name = $mName")
+                    Log.i("NYA_serv", "Writing author = $mAuthor")
+                    Log.i("NYA_serv", "Writing authorUID = $mAuthorUID")
+                    Log.i("NYA_serv", "Writing mainPicUri = $mainPicUri")
+                    Log.i("NYA_serv", "Writing key = $key, name = $mName, author = $mAuthor, authorUID = $mAuthorUID, mainPicUri = $mainPicUri")
+                    dbRef.child(Utils.CHILD_RECIPE).child(key).setValue(Recipe(key = key, name = mName, author = mAuthor,
+                            authorUID = mAuthorUID, mainPicUri = mainPicUri)).addOnFailureListener { e ->
+                        Log.i("NYA_serv", "Error writing to recipes")
+                        throw e
+                    }
+                    Log.i("NYA_serv", "Finished writing recipe")
+                    Log.i("NYA_serv", "Writing key = $key, name = $mName, author = $mAuthor, authorUID = $mAuthorUID, mainPicUri = $mainPicUri, ingredientsList = $ingredientsList, stepList = $mStepsList")
+                    dbRef.child(Utils.CHILD_WHOLE_RECIPE).child(key).setValue(WholeRecipe(key = key, name = mName, authorUID = mAuthorUID,
+                            author = mAuthor, mainPicUri = mainPicUri, ingredientsList = ingredientsList, stepsList = mStepsList)).addOnFailureListener { e ->
+                        Log.i("NYA_serv", "Error writing to whole recipes")
+                        throw e
+                    }
+                    Log.i("NYA_serv", "Finished writing whole recipe")
+                }.addOnCompleteListener { task ->
+                    CookingDatabase.destroyInstance()
+                    if (task.isSuccessful) {
+                        Log.i("NYA_serv", "Uploading finished successfully")
+                    } else {
+                        Log.i("NYA_serv", "Uploading finished with an error")
+                    }
                 }
             }
         }
-
-        return false
-    }
-
-    override fun onStopJob(job: JobParameters?): Boolean {
-        Log.i("NYA_serv", "Job stopped: ${job?.tag}")
-        //Should this job be retried?
-        return true
     }
 
     private inner class MainPicCallable() : Callable<String?> {
