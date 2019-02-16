@@ -3,9 +3,10 @@ package com.mishenka.cookingstuff.fragments
 import android.content.Context
 import android.os.Bundle
 import android.support.v4.app.Fragment
+import android.support.v4.content.ContextCompat
 import android.support.v7.widget.RecyclerView
 import android.view.*
-import android.widget.Button
+import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import com.bumptech.glide.Glide
@@ -15,6 +16,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import com.mishenka.cookingstuff.R
 import com.mishenka.cookingstuff.data.Recipe
+import com.mishenka.cookingstuff.utils.MainApplication
 import com.mishenka.cookingstuff.utils.Utils
 import com.mishenka.cookingstuff.views.UpperRecipeView
 
@@ -84,7 +86,7 @@ class HomeFragment : Fragment() {
             override fun onBindViewHolder(holder: RecipeViewHolder, position: Int, model: Recipe) {
                 holder.tvRecipeName.text = model.name
                 holder.tvAuthorName.text = model.author
-                holder.tvWatchCount.text = "Read count: ${model.readCount}"
+                holder.tvWatchCount.text = "${model.readCount}"
                 if (model.mainPicUri != null && model.mainPicUri != "") {
                     Glide.with(holder.ivMainPicture.context)
                             .load(model.mainPicUri)
@@ -104,12 +106,16 @@ class HomeFragment : Fragment() {
 
                         override fun onDataChange(p0: DataSnapshot) {
                             isStarred = p0.value as Boolean?
-                            holder.bStar.text = if (isStarred != null && isStarred!!) "Starred!" else "Star!"
+                            if (isStarred != null && isStarred!!) {
+                                holder.bStar.setImageDrawable(ContextCompat.getDrawable(MainApplication.applicationContext(), R.drawable.star_checked))
+                            } else {
+                                holder.bStar.setImageDrawable(ContextCompat.getDrawable(MainApplication.applicationContext(), R.drawable.star_unchecked))
+                            }
                         }
                     })
                 }
                 holder.bStar.setOnClickListener {
-                    listener?.onStarButtonClicked(getItem(position).key, it as Button)
+                    listener?.onStarButtonClicked(getItem(position).key, it as ImageButton)
                 }
             }
         }
@@ -184,12 +190,12 @@ class HomeFragment : Fragment() {
         val ivMainPicture = upperRecipe.findViewById<ImageView>(R.id.iv_upper_recipe_main)
 
         val tvWatchCount = recipeView.findViewById<TextView>(R.id.tv_watch_count)
-        val bStar = recipeView.findViewById<Button>(R.id.b_star)
+        val bStar = recipeView.findViewById<ImageButton>(R.id.b_star)
     }
 
     interface HomeFragmentListener {
         fun onRecyclerItemClicked(recipeKey : String?)
-        fun onStarButtonClicked(recipeKey : String?, view : Button)
+        fun onStarButtonClicked(recipeKey : String?, view : ImageButton)
     }
 
     companion object {

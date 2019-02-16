@@ -3,10 +3,11 @@ package com.mishenka.cookingstuff.activities
 import android.content.Intent
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
-import android.util.Log
+import android.support.v4.content.ContextCompat
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Button
+import android.widget.ImageButton
 import com.firebase.ui.auth.AuthUI
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -19,6 +20,7 @@ import com.mishenka.cookingstuff.fragments.BookmarkFragment
 import com.mishenka.cookingstuff.fragments.ChatFragment
 import com.mishenka.cookingstuff.fragments.HomeFragment
 import com.mishenka.cookingstuff.fragments.MeFragment
+import com.mishenka.cookingstuff.utils.MainApplication
 import com.mishenka.cookingstuff.utils.Utils
 
 class MainActivity : AppCompatActivity(), HomeFragment.HomeFragmentListener {
@@ -122,7 +124,7 @@ class MainActivity : AppCompatActivity(), HomeFragment.HomeFragmentListener {
         }
     }
 
-    override fun onStarButtonClicked(recipeKey: String?, view : Button) {
+    override fun onStarButtonClicked(recipeKey: String?, view : ImageButton) {
         recipeKey?.let { key ->
             mAuth.currentUser?.let { user ->
                 var alreadyStarred = false
@@ -156,7 +158,7 @@ class MainActivity : AppCompatActivity(), HomeFragment.HomeFragmentListener {
                                     }
                                 }
                             })
-                            view.text = getString(R.string.starred)
+                            view.setImageDrawable(ContextCompat.getDrawable(MainApplication.applicationContext(), R.drawable.star_checked))
                         } else {
                             val currentStarRef = currentUserRef.child(Utils.CHILD_STARRED_POSTS).child(key)
                             currentStarRef.setValue(null)
@@ -174,7 +176,7 @@ class MainActivity : AppCompatActivity(), HomeFragment.HomeFragmentListener {
                                     }
                                 }
                             })
-                            view.text = getString(R.string.star)
+                            view.setImageDrawable(ContextCompat.getDrawable(MainApplication.applicationContext(), R.drawable.star_unchecked))
                         }
                     }
                 })

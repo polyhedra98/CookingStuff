@@ -8,12 +8,24 @@
     <TextView
         android:id="@+id/tv_upper_recipe_name"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="8dp"
+        android:layout_marginStart="8dp"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        android:shadowColor="#000000"
+        android:shadowRadius="0.5"
+        android:textColor="@color/ic_launcher_background"
+        />
 
     <TextView
         android:id="@+id/tv_upper_author_name"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content"
+        android:layout_marginLeft="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginBottom="8dp"
+        />
 
     <ImageView
         android:id="@+id/iv_upper_recipe_main"
