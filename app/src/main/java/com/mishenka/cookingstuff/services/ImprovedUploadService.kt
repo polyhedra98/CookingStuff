@@ -89,7 +89,7 @@ class ImprovedUploadService : JobService() {
                             stepPicsLocalUris.add(it)
                         }
                     }
-                    val localStepPicsStorageRefs = ArrayList<String?>(stepPicsLocalUris.size)
+                    val localStepPicsStorageRefs = arrayOfNulls<String?>(stepPicsLocalUris.size)
                     val cookingSRef = FirebaseStorage.getInstance().reference.child(Utils.CHILD_COOKING_PHOTOS)
                     val metadata = StorageMetadata.Builder().setContentType(Utils.IMAGE_CONTENT_TYPE).build()
                     val uploadTasks = ArrayList<UploadTask>()
@@ -103,7 +103,7 @@ class ImprovedUploadService : JobService() {
                         }
                     }
                     Tasks.await(Tasks.whenAll(uploadTasks))
-                    stepPicsStorageRefs = localStepPicsStorageRefs
+                    stepPicsStorageRefs = localStepPicsStorageRefs.toList()
                 }
             }
             mainPicJob.join()

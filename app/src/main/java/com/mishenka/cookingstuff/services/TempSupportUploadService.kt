@@ -72,7 +72,7 @@ class TempSupportUploadService : IntentService(TempSupportUploadService::class.s
                             stepPicsLocalUris.add(it)
                         }
                     }
-                    val localStepPicsStorageRefs = ArrayList<String?>(stepPicsLocalUris.size)
+                    val localStepPicsStorageRefs = arrayOfNulls<String?>(stepPicsLocalUris.size)
                     val cookingSRef = FirebaseStorage.getInstance().reference.child(Utils.CHILD_COOKING_PHOTOS)
                     val metadata = StorageMetadata.Builder().setContentType(Utils.IMAGE_CONTENT_TYPE).build()
                     val uploadTasks = ArrayList<UploadTask>()
@@ -86,7 +86,7 @@ class TempSupportUploadService : IntentService(TempSupportUploadService::class.s
                         }
                     }
                     Tasks.await(Tasks.whenAll(uploadTasks))
-                    stepPicsStorageRefs = localStepPicsStorageRefs
+                    stepPicsStorageRefs = localStepPicsStorageRefs.asList()
                 }
             }
             mainPicJob.join()
