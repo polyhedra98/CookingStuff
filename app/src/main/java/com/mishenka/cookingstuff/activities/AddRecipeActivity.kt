@@ -21,17 +21,12 @@ import android.util.Log
 import android.view.ViewGroup
 import android.widget.*
 import com.bumptech.glide.Glide
-import com.firebase.jobdispatcher.Constraint
-import com.firebase.jobdispatcher.FirebaseJobDispatcher
-import com.firebase.jobdispatcher.GooglePlayDriver
-import com.firebase.jobdispatcher.RetryStrategy
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.mishenka.cookingstuff.data.*
 import com.mishenka.cookingstuff.interfaces.StepListener
-import com.mishenka.cookingstuff.services.SupportUploadService
+import com.mishenka.cookingstuff.services.ImprovedUploadService
 import com.mishenka.cookingstuff.services.TempSupportUploadService
-import com.mishenka.cookingstuff.services.UploadService
 import com.mishenka.cookingstuff.utils.MainApplication
 import com.mishenka.cookingstuff.utils.Utils
 import com.mishenka.cookingstuff.utils.database.CookingDatabase
@@ -68,7 +63,7 @@ class AddRecipeActivity : AppCompatActivity(), StepListener {
         setContentView(R.layout.activity_add_recipe)
 
         mDBRef = FirebaseDatabase.getInstance().reference
-        mStepsSRef = FirebaseStorage.getInstance().reference.child(Utils.CHILD_STEPS_PHOTOS)
+        mStepsSRef = FirebaseStorage.getInstance().reference.child(Utils.CHILD_COOKING_PHOTOS)
 
         mDbWorkerThread = DbWorkerThread("dbWorkerThread")
         mDbWorkerThread.start()
@@ -140,10 +135,10 @@ class AddRecipeActivity : AppCompatActivity(), StepListener {
     @RequiresApi(Build.VERSION_CODES.LOLLIPOP)
     private fun scheduleUploadJob(dataId: String) {
         Log.i("NYA_serv", "SDK VER ge than Lollipop")
-        val startServiceIntent = Intent(this, UploadService::class.java)
+        val startServiceIntent = Intent(this, ImprovedUploadService::class.java)
         startServiceIntent.putExtra(Utils.UPLOAD_DATA_KEY, dataId)
         startService(startServiceIntent)
-        val componentName = ComponentName(this, UploadService::class.java)
+        val componentName = ComponentName(this, ImprovedUploadService::class.java)
         val jobInfo = JobInfo.Builder(Utils.UPLOAD_SERVICE_ID, componentName)
                 .setRequiredNetworkType(JobInfo.NETWORK_TYPE_ANY)
                 .build()
@@ -161,25 +156,6 @@ class AddRecipeActivity : AppCompatActivity(), StepListener {
 
     private fun supportScheduleUploadJob(dataId: String) {
         Log.i("NYA_serv", "SDK VER l than Lollipop")
-        //TODO("Doesn't work...")
-        /*
-        val dispatcher = FirebaseJobDispatcher(GooglePlayDriver(MainApplication.applicationContext()))
-        val bundle = Bundle()
-        bundle.putString(Utils.UPLOAD_DATA_KEY, dataId)
-        val uploadJob = dispatcher.newJobBuilder()
-                .setService(SupportUploadService::class.java)
-                .setTag(Utils.UPLOAD_SERVICE_TAG)
-                .setConstraints(Constraint.ON_ANY_NETWORK)
-                .setRecurring(true)
-                .setRetryStrategy(RetryStrategy.DEFAULT_EXPONENTIAL)
-                .setExtras(bundle)
-                .build()
-        val resultCode = dispatcher.schedule(uploadJob)
-        if (resultCode == JobScheduler.RESULT_SUCCESS) {
-            Log.i("NYA_serv", "Support job scheduled")
-        } else {
-            Log.i("NYA_serv", "Support job not scheduled")
-        }*/
         val intent = Intent(this, TempSupportUploadService::class.java)
         intent.putExtra(Utils.UPLOAD_DATA_KEY, dataId)
         startService(intent)
@@ -194,10 +170,10 @@ class AddRecipeActivity : AppCompatActivity(), StepListener {
     }
 
     private fun stopService() {
-        stopService(Intent(this, UploadService::class.java))
+        stopService(Intent(this, ImprovedUploadService::class.java))
     }
 
-    override fun onStepPicButtonClicked(v: View?, pv : View?, s : Step) {
+    override fun onStepPicButtonClicked(v: View?, pv: View?, s: Step) {
         if (!userVerification()) return
         mCurrentButton = v
         mCurrentParentView = pv
@@ -264,7 +240,7 @@ class AddRecipeActivity : AppCompatActivity(), StepListener {
         return FirebaseAuth.getInstance().currentUser != null
     }
 
-    private fun showPictureDialog(RC_CODE_GALLERY : Int, RC_CODE_CAMERA: Int) {
+    private fun showPictureDialog(RC_CODE_GALLERY: Int, RC_CODE_CAMERA: Int) {
         val pictureDialog = AlertDialog.Builder(this)
         pictureDialog.setTitle("Select Action")
         val pictureDialogItems = arrayOf("Gallery")
@@ -277,14 +253,14 @@ class AddRecipeActivity : AppCompatActivity(), StepListener {
         pictureDialog.show()
     }
 
-    private fun choosePhotoFromGallery(RC_CODE : Int) {
+    private fun choosePhotoFromGallery(RC_CODE: Int) {
         val galleryIntent = Intent(Intent.ACTION_PICK,
                 android.provider.MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
 
         startActivityForResult(galleryIntent, RC_CODE)
     }
 
-    private fun takePhotoFromCamera(RC_CODE : Int) {
+    private fun takePhotoFromCamera(RC_CODE: Int) {
         val cameraIntent = Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE)
         startActivityForResult(cameraIntent, RC_CODE)
     }

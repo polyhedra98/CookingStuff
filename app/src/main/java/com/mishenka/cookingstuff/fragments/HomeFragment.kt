@@ -87,9 +87,10 @@ class HomeFragment : Fragment() {
                 holder.tvRecipeName.text = model.name
                 holder.tvAuthorName.text = model.author
                 holder.tvWatchCount.text = "${model.readCount}"
-                if (model.mainPicUri != null && model.mainPicUri != "") {
+                //TODO("Change for refs")
+                if (model.mainPicRef != null && model.mainPicRef != "") {
                     Glide.with(holder.ivMainPicture.context)
-                            .load(model.mainPicUri)
+                            .load(model.mainPicRef)
                             .into(holder.ivMainPicture)
                 }
                 holder.upperRecipe.setOnClickListener {

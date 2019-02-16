@@ -1,8 +1,12 @@
 package com.mishenka.cookingstuff.services
 
-import android.app.IntentService
+import android.app.Service
+import android.app.job.JobParameters
+import android.app.job.JobService
 import android.content.Intent
 import android.net.Uri
+import android.os.Build
+import android.support.annotation.RequiresApi
 import android.util.Log
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.database.FirebaseDatabase
@@ -14,11 +18,10 @@ import com.mishenka.cookingstuff.utils.MainApplication
 import com.mishenka.cookingstuff.utils.Utils
 import com.mishenka.cookingstuff.utils.database.CookingDatabase
 import com.mishenka.cookingstuff.utils.database.PersistableParcelable
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 
-class TempSupportUploadService : IntentService(TempSupportUploadService::class.simpleName) {
+@RequiresApi(Build.VERSION_CODES.LOLLIPOP)
+class ImprovedUploadService : JobService() {
     private lateinit var mDatabaseJob: Job
     private lateinit var mName: String
     private lateinit var mAuthorUID: String
@@ -27,7 +30,17 @@ class TempSupportUploadService : IntentService(TempSupportUploadService::class.s
     private var mIngredientsList: List<Ingredient>? = null
     private var mStepsList: List<Step>? = null
 
-    override fun onHandleIntent(intent: Intent) {
+    override fun onCreate() {
+        super.onCreate()
+        Log.i("NYA_serv", "Improved upload service created")
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        Log.i("NYA_serv", "Improved upload service destroyed")
+    }
+
+    override fun onStartCommand(intent: Intent, flags: Int, startId: Int): Int {
         val uploadDataId = intent.getStringExtra(Utils.UPLOAD_DATA_KEY)
         val db = CookingDatabase.getInstance(MainApplication.applicationContext())
         val persistableParcelable = PersistableParcelable<UploadData>(db!!)
@@ -40,6 +53,10 @@ class TempSupportUploadService : IntentService(TempSupportUploadService::class.s
             mIngredientsList = uploadData.ingredientsList
             mStepsList = uploadData.stepsList
         }
+        return Service.START_REDELIVER_INTENT
+    }
+
+    override fun onStartJob(params: JobParameters?): Boolean {
         Log.i("NYA_serv", "Started uploading")
         GlobalScope.launch {
             mDatabaseJob.join()
@@ -134,6 +151,15 @@ class TempSupportUploadService : IntentService(TempSupportUploadService::class.s
             dbRef.child(Utils.CHILD_WHOLE_RECIPE).child(key).setValue(WholeRecipe(key = key,
                     ingredientsList = ingredientsList, stepsList = firebaseStepsList))
 
+        }.invokeOnCompletion {
+            jobFinished(params, false)
         }
+        return false
+    }
+
+    override fun onStopJob(params: JobParameters?): Boolean {
+        Log.i("NYA_serv", "Job stopped: ${params?.jobId}")
+        //Restart?
+        return true
     }
 }
