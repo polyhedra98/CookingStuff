@@ -111,11 +111,11 @@ class ImprovedUploadService : JobService() {
                             potentialTask = photoRef.downloadUrl.addOnSuccessListener { downloadUrl ->
                                 localStepPicUrls[counter] = downloadUrl.toString()
                             }
+                            potentialTasks.add(potentialTask)
                         }
-                        potentialTasks.add(potentialTask)
                     }
                     Tasks.await(Tasks.whenAll(uploadTasks))
-                    if (potentialTasks.size == stepPicsLocalUris.size && !potentialTasks.contains(null)) {
+                    if (potentialTasks.size == stepPicsLocalUris.size) {
                         Tasks.await(Tasks.whenAll(potentialTasks))
                         stepPicsDownloadUrls = localStepPicUrls.asList()
                     }
