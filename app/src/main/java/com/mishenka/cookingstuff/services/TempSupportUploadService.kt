@@ -4,6 +4,7 @@ import android.app.IntentService
 import android.content.Intent
 import android.net.Uri
 import android.util.Log
+import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.storage.FirebaseStorage
@@ -43,7 +44,7 @@ class TempSupportUploadService : IntentService(TempSupportUploadService::class.s
         Log.i("NYA_serv", "Started uploading")
         GlobalScope.launch {
             mDatabaseJob.join()
-            var mainPicStorageRef: String? = null
+            var mainPicDownloadUrl: String? = null
             val mainPicJob = GlobalScope.launch {
                 mMainPicUri?.let { mainPickUriString ->
                     val mainPicUri = Uri.parse(mainPickUriString)
@@ -51,13 +52,19 @@ class TempSupportUploadService : IntentService(TempSupportUploadService::class.s
                     val metadata = StorageMetadata.Builder().setContentType(Utils.IMAGE_CONTENT_TYPE).build()
                     val photoRef = cookingSRef.child("$mAuthorUID/${mainPicUri.lastPathSegment!!}")
                     val uploadTask = photoRef.putFile(mainPicUri, metadata)
+                    var potentialUploadTask: Task<Uri>? = null
                     uploadTask.addOnSuccessListener {
-                        mainPicStorageRef = photoRef.toString()
+                        potentialUploadTask = photoRef.downloadUrl.addOnSuccessListener { downloadUrl ->
+                            mainPicDownloadUrl = downloadUrl.toString()
+                        }
                     }
                     Tasks.await(uploadTask)
+                    potentialUploadTask?.let { potentialTask ->
+                        Tasks.await(potentialTask)
+                    }
                 }
             }
-            var stepPicsStorageRefs: List<String?>? = null
+            var stepPicsDownloadUrls: List<String?>? = null
             val stepPicsJob = GlobalScope.launch {
                 mStepsList?.let { nullSafeStepsList ->
                     val stepPicsLocalUris = ArrayList<String>()
@@ -72,21 +79,29 @@ class TempSupportUploadService : IntentService(TempSupportUploadService::class.s
                             stepPicsLocalUris.add(it)
                         }
                     }
-                    val localStepPicsStorageRefs = arrayOfNulls<String?>(stepPicsLocalUris.size)
+                    val localStepPicUrls = arrayOfNulls<String?>(stepPicsLocalUris.size)
                     val cookingSRef = FirebaseStorage.getInstance().reference.child(Utils.CHILD_COOKING_PHOTOS)
                     val metadata = StorageMetadata.Builder().setContentType(Utils.IMAGE_CONTENT_TYPE).build()
-                    val uploadTasks = ArrayList<UploadTask>()
+                    val uploadTasks = ArrayList<UploadTask>(stepPicsLocalUris.size)
+                    val potentialTasks =  ArrayList<Task<Uri>?>()
                     for ((counter, localStepUri) in stepPicsLocalUris.withIndex()) {
                         val uriRepresentation = Uri.parse(localStepUri)
                         val photoRef = cookingSRef.child("$mAuthorUID/${uriRepresentation.lastPathSegment}")
                         val uploadTask = photoRef.putFile(uriRepresentation, metadata)
                         uploadTasks.add(uploadTask)
+                        var potentialTask: Task<Uri>? = null
                         uploadTask.addOnSuccessListener {
-                            localStepPicsStorageRefs[counter] = photoRef.toString()
+                            potentialTask = photoRef.downloadUrl.addOnSuccessListener { downloadUrl ->
+                                localStepPicUrls[counter] = downloadUrl.toString()
+                            }
                         }
+                        potentialTasks.add(potentialTask)
                     }
                     Tasks.await(Tasks.whenAll(uploadTasks))
-                    stepPicsStorageRefs = localStepPicsStorageRefs.asList()
+                    if (potentialTasks.size == stepPicsLocalUris.size && !potentialTasks.contains(null)) {
+                        Tasks.await(Tasks.whenAll(potentialTasks))
+                        stepPicsDownloadUrls = localStepPicUrls.asList()
+                    }
                 }
             }
             mainPicJob.join()
@@ -95,8 +110,8 @@ class TempSupportUploadService : IntentService(TempSupportUploadService::class.s
             val dbRef = FirebaseDatabase.getInstance().reference
             val key = dbRef.child(Utils.CHILD_RECIPE).push().key!!
             val firebaseStepsList = ArrayList<FirebaseStep>()
-            if (mStepsList != null && stepPicsStorageRefs != null) {
-                val localStepPicsRefs = stepPicsStorageRefs
+            if (mStepsList != null && stepPicsDownloadUrls != null) {
+                val localStepPicsRefs = stepPicsDownloadUrls
                 var innerCounter = 0
                 for (step in mStepsList!!) {
                     val firebaseStep = FirebaseStep()
@@ -120,7 +135,7 @@ class TempSupportUploadService : IntentService(TempSupportUploadService::class.s
                         }
                     }
                     if (!listOfRefs.isEmpty()) {
-                        firebaseStep.picRefs = listOfRefs
+                        firebaseStep.picUrls = listOfRefs
                     }
                     firebaseStepsList.add(firebaseStep)
                 }
@@ -130,7 +145,7 @@ class TempSupportUploadService : IntentService(TempSupportUploadService::class.s
                 ingredientsList = mIngredientsList!!.filter { ingredient -> !ingredient.text.isNullOrEmpty() }
             }
             dbRef.child(Utils.CHILD_RECIPE).child(key).setValue(Recipe(key = key, name = mName,
-                    author = mAuthor, authorUID = mAuthorUID, mainPicRef = mainPicStorageRef))
+                    author = mAuthor, authorUID = mAuthorUID, mainPicUrl = mainPicDownloadUrl))
             dbRef.child(Utils.CHILD_WHOLE_RECIPE).child(key).setValue(WholeRecipe(key = key,
                     ingredientsList = ingredientsList, stepsList = firebaseStepsList))
 

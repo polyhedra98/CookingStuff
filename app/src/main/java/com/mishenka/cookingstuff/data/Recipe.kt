@@ -7,5 +7,5 @@ data class Recipe (
     var author : String? = null,
     var authorUID : String? = null,
     var readCount : Int = 0,
-    var mainPicRef : String? = null
+    var mainPicUrl : String? = null
 )
