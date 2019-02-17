@@ -69,7 +69,7 @@ class ImprovedUploadService : JobService() {
                     val photoRef = cookingSRef.child("$mAuthorUID/${mainPicUri.lastPathSegment!!}")
                     val uploadTask = photoRef.putFile(mainPicUri, metadata)
                     uploadTask.addOnSuccessListener {
-
+                        mainPicStorageRef = photoRef.toString()
                     }
                     Tasks.await(uploadTask)
                 }
