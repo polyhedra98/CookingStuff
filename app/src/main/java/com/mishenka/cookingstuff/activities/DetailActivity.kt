@@ -34,7 +34,7 @@ class DetailActivity : AppCompatActivity() {
             }
 
             override fun onDataChange(p0: DataSnapshot) {
-                val recipeName = p0.child(Utils.WHOLE_RECIPE_NAME_CHILD).value
+                /*val recipeName = p0.child(Utils.WHOLE_RECIPE_NAME_CHILD).value
                 recipeName?.let {
                     val tvRecipeName = findViewById<TextView>(R.id.tv_detail_recipe_name)
                     tvRecipeName.text = it.toString()
@@ -46,14 +46,13 @@ class DetailActivity : AppCompatActivity() {
                     Glide.with(ivMainPic.context)
                             .load(it)
                             .into(ivMainPic)
-                }
+                }*/
 
                 val params = LinearLayout.LayoutParams (
                         LinearLayout.LayoutParams.MATCH_PARENT,
                         LinearLayout.LayoutParams.WRAP_CONTENT
                 )
                 try {
-                //TODO("Doesn't work with D1 null D3. Cannot convert null.")
                     val stepsListNullable = p0.child(Utils.WHOLE_RECIPE_STEPS_LIST_CHILD).value
                     stepsListNullable?.let { stepsList ->
                         val mapper = Klaxon()
@@ -61,8 +60,8 @@ class DetailActivity : AppCompatActivity() {
                         stepsDict?.let { dict ->
                             val vgSteps = findViewById<ViewGroup>(R.id.detail_steps)
                             for (step in dict) {
-                                step?.let {
-                                    vgSteps.addView(NonInteractiveStepView(step, this@DetailActivity), params)
+                                step?.let { nonParcelableStep ->
+                                    vgSteps.addView(NonInteractiveStepView(nonParcelableStep, this@DetailActivity), params)
                                 }
                             }
                         }
@@ -78,8 +77,8 @@ class DetailActivity : AppCompatActivity() {
                         ingredientsDict?.let { dict ->
                             val vgIngredients = findViewById<ViewGroup>(R.id.detail_ingredients)
                             for (ingredient in dict) {
-                                ingredient?.let {
-                                    vgIngredients.addView(NonInteractiveIngredientView(ingredient, this@DetailActivity), params)
+                                ingredient?.let { nonParcelableIngredient ->
+                                    vgIngredients.addView(NonInteractiveIngredientView(nonParcelableIngredient, this@DetailActivity), params)
                                 }
                             }
                         }

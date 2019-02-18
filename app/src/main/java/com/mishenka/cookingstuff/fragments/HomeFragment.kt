@@ -10,6 +10,8 @@ import android.widget.ImageButton
 import android.widget.ImageView
 import android.widget.TextView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.RequestBuilder
+import com.bumptech.glide.request.RequestOptions
 import com.firebase.ui.database.FirebaseRecyclerAdapter
 import com.firebase.ui.database.FirebaseRecyclerOptions
 import com.google.firebase.auth.FirebaseAuth
@@ -90,6 +92,7 @@ class HomeFragment : Fragment() {
                 if (model.mainPicUrl != null && model.mainPicUrl != "") {
                     Glide.with(holder.ivMainPicture.context)
                             .load(model.mainPicUrl)
+                            .apply(RequestOptions().centerCrop())
                             .into(holder.ivMainPicture)
                 }
                 holder.upperRecipe.setOnClickListener {

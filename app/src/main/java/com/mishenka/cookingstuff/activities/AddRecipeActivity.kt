@@ -203,25 +203,32 @@ class AddRecipeActivity : AppCompatActivity(), StepListener {
                             mCurrentStep?.firstPicUri = currentStepPicUri.toString()
                             val firstPic = mCurrentParentView?.findViewById<ImageView>(R.id.iv_step_first)
                             firstPic?.visibility = View.VISIBLE
-                            Glide.with(firstPic?.context)
-                                    .load(currentStepPicUri)
-                                    .into(firstPic)
+                            firstPic?.let { fp ->
+                                fp.visibility = View.VISIBLE
+                                Glide.with(fp.context)
+                                        .load(currentStepPicUri)
+                                        .into(fp)
+                            }
                         }
                         R.id.b_second_step -> {
                             mCurrentStep?.secondPicUri = currentStepPicUri.toString()
                             val secondPic = mCurrentParentView?.findViewById<ImageView>(R.id.iv_step_second)
-                            secondPic?.visibility = View.VISIBLE
-                            Glide.with(secondPic?.context)
-                                    .load(currentStepPicUri)
-                                    .into(secondPic)
+                            secondPic?.let { sp ->
+                                sp.visibility = View.VISIBLE
+                                Glide.with(sp.context)
+                                        .load(currentStepPicUri)
+                                        .into(sp)
+                            }
                         }
                         R.id.b_third_step -> {
                             mCurrentStep?.thirdPicUri = currentStepPicUri.toString()
                             val thirdPic = mCurrentParentView?.findViewById<ImageView>(R.id.iv_step_third)
-                            thirdPic?.visibility = View.VISIBLE
-                            Glide.with(thirdPic?.context)
-                                    .load(currentStepPicUri)
-                                    .into(thirdPic)
+                            thirdPic?.let { tp ->
+                                tp.visibility = View.VISIBLE
+                                Glide.with(tp.context)
+                                        .load(currentStepPicUri)
+                                        .into(tp)
+                            }
                         }
                         else -> {
                         }

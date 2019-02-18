@@ -2,8 +2,8 @@ package com.mishenka.cookingstuff.views
 
 import android.content.Context
 import android.util.AttributeSet
+import android.util.Log
 import android.view.LayoutInflater
-import android.view.View
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
@@ -37,31 +37,19 @@ class NonInteractiveStepView : LinearLayout {
                 findViewById(R.id.iv_detail_second_step),
                 findViewById(R.id.iv_detail_third_step))
 
-        mStep.firstPicUri?.let {
-            if (!it.contains("content")) {
-                picUriList.add(it)
+        mStep.picUrls?.let { downloadedUrlsList ->
+            for (url in downloadedUrlsList) {
+                url?.let { singleUrl ->
+                    picUriList.add(singleUrl)
+                }
             }
         }
-        mStep.secondPicUri?.let {
-            if (!it.contains("content")) {
-                picUriList.add(it)
-            }
-        }
-        mStep.thirdPicUri?.let {
-            if (!it.contains("content")) {
-                picUriList.add(it)
-            }
-        }
-
-        var counter = -1
-        while (++counter < picUriList.size) {
+        var counter = 0
+        while (counter < picUriList.size) {
             Glide.with(picList[counter].context)
                     .load(picUriList[counter])
                     .into(picList[counter])
-        }
-        counter--
-        while (++counter < picList.size) {
-            picList[counter].visibility = View.GONE
+            counter++
         }
     }
 }

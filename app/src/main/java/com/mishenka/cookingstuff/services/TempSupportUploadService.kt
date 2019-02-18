@@ -137,17 +137,20 @@ class TempSupportUploadService : IntentService(TempSupportUploadService::class.s
                     if (!listOfRefs.isEmpty()) {
                         firebaseStep.picUrls = listOfRefs
                     }
-                    firebaseStepsList.add(firebaseStep)
+                    if (!firebaseStep.stepDescription.isNullOrEmpty() || !firebaseStep.picUrls.isNullOrEmpty()) {
+                        firebaseStepsList.add(firebaseStep)
+                    }
                 }
             }
             var ingredientsList: List<Ingredient>? = null
             if (mIngredientsList != null) {
                 ingredientsList = mIngredientsList!!.filter { ingredient -> !ingredient.text.isNullOrEmpty() }
             }
+            val safeFirebaseStepsList = if (firebaseStepsList.size == 0) { null } else { firebaseStepsList }
             dbRef.child(Utils.CHILD_RECIPE).child(key).setValue(Recipe(key = key, name = mName,
                     author = mAuthor, authorUID = mAuthorUID, mainPicUrl = mainPicDownloadUrl))
             dbRef.child(Utils.CHILD_WHOLE_RECIPE).child(key).setValue(WholeRecipe(key = key,
-                    ingredientsList = ingredientsList, stepsList = firebaseStepsList))
+                    ingredientsList = ingredientsList, stepsList = safeFirebaseStepsList))
 
         }
     }

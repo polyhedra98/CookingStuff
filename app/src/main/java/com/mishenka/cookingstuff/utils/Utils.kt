@@ -1,6 +1,9 @@
 package com.mishenka.cookingstuff.utils
 
 object Utils {
+    //size
+    const val THUMBNAIL_SIZE = 0.05f
+
     //ids
     const val UPLOAD_SERVICE_ID = 12
 
@@ -28,8 +31,6 @@ object Utils {
     const val CHILD_COOKING_PHOTOS = "cooking_pictures"
     const val CHILD_RECIPE_READ_COUNT = "readCount"
     const val CHILD_RECIPE_STAR_COUNT = "starCount"
-    const val WHOLE_RECIPE_NAME_CHILD = "name"
-    const val WHOLE_RECIPE_MAIN_PIC_CHILD = "mainPicRef"
     const val WHOLE_RECIPE_INGREDIENTS_LIST_CHILD = "ingredientsList"
     const val WHOLE_RECIPE_STEPS_LIST_CHILD = "stepsList"
 }
