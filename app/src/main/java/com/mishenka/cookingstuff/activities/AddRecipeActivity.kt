@@ -132,10 +132,11 @@ class AddRecipeActivity : AppCompatActivity(), StepListener, IngredientListener 
         val username = user.displayName
         val userID = user.uid
         val recDesc = findViewById<EditText>(R.id.et_recipe_description).text?.toString()
+        val commentsAllowed = findViewById<Switch>(R.id.sw_allow_comments).isChecked
         mLocalDb = CookingDatabase.getInstance(MainApplication.applicationContext())
         val persistableParcelable = PersistableParcelable<UploadData>(mLocalDb!!)
         val uploadData = UploadData(name = recipeName, authorUID = userID, author = username, description = recDesc,
-                mainPicUri = mMainPicUri?.toString(), ingredientsList = mIngredientsList, stepsList = mStepsList)
+                mainPicUri = mMainPicUri?.toString(), commentsAllowed = commentsAllowed,ingredientsList = mIngredientsList, stepsList = mStepsList)
         val dataId = recipeName + System.currentTimeMillis()
         GlobalScope.async {
             persistableParcelable.save(dataId, uploadData)
