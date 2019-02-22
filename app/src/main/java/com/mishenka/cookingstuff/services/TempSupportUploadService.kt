@@ -24,6 +24,8 @@ class TempSupportUploadService : IntentService(TempSupportUploadService::class.s
     private lateinit var mName: String
     private lateinit var mAuthorUID: String
     private var mAuthor: String? = null
+    private var mDescription: String? = null
+    private var mCommentsAllowed: Boolean? = null
     private var mMainPicUri: String? = null
     private var mIngredientsList: List<Ingredient>? = null
     private var mStepsList: List<Step>? = null
@@ -37,6 +39,8 @@ class TempSupportUploadService : IntentService(TempSupportUploadService::class.s
             mName = uploadData.name
             mAuthorUID = uploadData.authorUID
             mAuthor = uploadData.author
+            mDescription = uploadData.description
+            mCommentsAllowed = uploadData.commentsAllowed
             mMainPicUri = uploadData.mainPicUri
             mIngredientsList = uploadData.ingredientsList
             mStepsList = uploadData.stepsList
@@ -148,7 +152,8 @@ class TempSupportUploadService : IntentService(TempSupportUploadService::class.s
             }
             val safeFirebaseStepsList = if (firebaseStepsList.size == 0) { null } else { firebaseStepsList }
             dbRef.child(Utils.CHILD_RECIPE).child(key).setValue(Recipe(key = key, name = mName,
-                    author = mAuthor, authorUID = mAuthorUID, mainPicUrl = mainPicDownloadUrl))
+                    author = mAuthor, authorUID = mAuthorUID, description = mDescription,
+                    commentsAllowed = mCommentsAllowed, mainPicUrl = mainPicDownloadUrl))
             dbRef.child(Utils.CHILD_WHOLE_RECIPE).child(key).setValue(WholeRecipe(key = key,
                     ingredientsList = ingredientsList, stepsList = safeFirebaseStepsList))
 

@@ -2,12 +2,13 @@ package com.mishenka.cookingstuff.views
 
 import android.content.Context
 import android.util.AttributeSet
-import android.util.Log
 import android.view.LayoutInflater
+import android.view.View
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.request.RequestOptions
 import com.mishenka.cookingstuff.R
 import com.mishenka.cookingstuff.data.NonParcelableStep
 
@@ -26,9 +27,11 @@ class NonInteractiveStepView : LinearLayout {
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
 
-        mStep.stepDescription?.let {
-            val tvStepDescription = findViewById<TextView>(R.id.tv_detail_step_desc)
-            tvStepDescription.text = it
+        val tvStepDescription = findViewById<TextView>(R.id.tv_detail_step_desc)
+        if (mStep.stepDescription != null) {
+            tvStepDescription.text = mStep.stepDescription
+        } else {
+            tvStepDescription.visibility = View.GONE
         }
 
         val picUriList = ArrayList<String>()
@@ -44,12 +47,25 @@ class NonInteractiveStepView : LinearLayout {
                 }
             }
         }
-        var counter = 0
-        while (counter < picUriList.size) {
-            Glide.with(picList[counter].context)
-                    .load(picUriList[counter])
-                    .into(picList[counter])
-            counter++
+        if (picUriList.size == 0) {
+            val llIvContainer = findViewById<LinearLayout>(R.id.ll_detail_image_container)
+            llIvContainer.visibility = View.GONE
+        } else {
+            val params = LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT)
+            params.setMargins(0, 0, 0, 8)
+            tvStepDescription.layoutParams = params
+            var counter = 0
+            while (counter < picUriList.size) {
+                Glide.with(picList[counter].context)
+                        .load(picUriList[counter])
+                        .apply(RequestOptions().centerCrop())
+                        .into(picList[counter])
+                counter++
+            }
+            while (counter < picList.size) {
+                picList[counter].visibility = View.GONE
+                counter++
+            }
         }
     }
 }

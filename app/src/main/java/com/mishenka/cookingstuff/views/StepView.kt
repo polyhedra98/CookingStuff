@@ -88,5 +88,10 @@ class StepView : LinearLayout {
                     .load(mStep.thirdPicUri)
                     .into(ivThirdStep)
         }
+
+        val bClear = findViewById<ImageButton>(R.id.b_step_clear)
+        bClear.setOnClickListener {
+            mStepListener?.onStepClearButtonClicked(this)
+        }
     }
 }

@@ -1,6 +1,9 @@
 package com.mishenka.cookingstuff.views
 
 import android.content.Context
+import android.graphics.Typeface
+import android.text.SpannableString
+import android.text.style.StyleSpan
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
@@ -30,14 +33,18 @@ class NonInteractiveIngredientView : LinearLayout {
                 tvIngredient.visibility = View.GONE
                 val tvSeparator = findViewById<TextView>(R.id.tv_non_int_separator)
                 mIngredient.text?.let {
-                    tvSeparator.text = it
+                    val spannableString = SpannableString(it)
+                    spannableString.setSpan(StyleSpan(Typeface.ITALIC), 0, spannableString.length, 0)
+                    tvSeparator.text = spannableString
                 }
             } else {
                 val tvSeparator = findViewById<TextView>(R.id.tv_non_int_separator)
                 tvSeparator.visibility = View.GONE
                 val tvIngredient = findViewById<TextView>(R.id.tv_non_int_ingredient)
                 mIngredient.text?.let {
-                    tvIngredient.text = it
+                    val spannableString = SpannableString(it)
+                    spannableString.setSpan(StyleSpan(Typeface.ITALIC), 0, spannableString.length, 0)
+                    tvIngredient.text = spannableString
                 }
             }
         }

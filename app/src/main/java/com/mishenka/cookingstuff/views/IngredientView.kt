@@ -6,19 +6,40 @@ import android.text.TextWatcher
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
-import android.widget.EditText
-import android.widget.LinearLayout
-import android.widget.TextView
+import android.widget.*
 import com.mishenka.cookingstuff.R
 import com.mishenka.cookingstuff.data.Ingredient
+import com.mishenka.cookingstuff.interfaces.IngredientListener
 
 class IngredientView : LinearLayout {
     private val mIngredient: Ingredient
+    private val mListener: IngredientListener?
 
-    constructor(ingredient: Ingredient, context: Context?) : super(context) { mIngredient = ingredient }
-    constructor(ingredient: Ingredient, context: Context?, attrs: AttributeSet?) : super(context, attrs) { mIngredient = ingredient }
+    constructor(ingredient: Ingredient, context: Context?) : super(context) {
+        mIngredient = ingredient
+        mListener = if (context is IngredientListener) {
+            context
+        } else {
+            null
+        }
+    }
+    constructor(ingredient: Ingredient, context: Context?, attrs: AttributeSet?) : super(context, attrs) {
+        mIngredient = ingredient
+        mListener = if (context is IngredientListener) {
+            context
+        } else {
+            null
+        }
+    }
     constructor(ingredient: Ingredient, context: Context?, attrs: AttributeSet?, defStyleAttr: Int) : super(context, attrs,
-            defStyleAttr) { mIngredient = ingredient }
+            defStyleAttr) {
+        mIngredient = ingredient
+        mListener = if (context is IngredientListener) {
+            context
+        } else {
+            null
+        }
+    }
 
     init {
         LayoutInflater.from(this.context).inflate(R.layout.item_ingredient, this)
@@ -67,6 +88,10 @@ class IngredientView : LinearLayout {
                         //TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
                     }
                 })
+            }
+            val bClear = findViewById<ImageButton>(R.id.b_ingredient_clear)
+            bClear.setOnClickListener {
+                mListener?.onIngredientClearButtonClicked(this)
             }
         }
     }

@@ -4,18 +4,22 @@ import android.os.Parcel
 import android.os.Parcelable
 
 data class UploadData (
-        val name : String,
-        val authorUID : String,
-        val author : String?,
-        val mainPicUri : String? = null,
-        val ingredientsList : List<Ingredient>? = null,
-        val stepsList : List<Step>? = null
+        val name: String,
+        val authorUID: String,
+        val author: String?,
+        val description: String? = null,
+        val mainPicUri: String? = null,
+        val commentsAllowed: Boolean? = null,
+        val ingredientsList: List<Ingredient>? = null,
+        val stepsList: List<Step>? = null
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
             parcel.readString()!!,
             parcel.readString()!!,
             parcel.readString(),
             parcel.readString(),
+            parcel.readString(),
+            parcel.readByte() != 0.toByte(),
             arrayListOf<Ingredient>().apply {
                 parcel.readList(this, Ingredient::class.java.classLoader)
             },
@@ -28,7 +32,13 @@ data class UploadData (
         dest?.writeString(name)
         dest?.writeString(authorUID)
         dest?.writeString(author)
+        dest?.writeString(description)
         dest?.writeString(mainPicUri)
+        if (commentsAllowed != null) {
+            dest?.writeByte((if (commentsAllowed) 1 else 0).toByte())
+        } else {
+            dest?.writeByte(0.toByte())
+        }
         dest?.writeList(ingredientsList)
         dest?.writeList(stepsList)
     }

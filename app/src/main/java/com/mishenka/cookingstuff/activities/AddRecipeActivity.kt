@@ -21,13 +21,16 @@ import android.util.Log
 import android.view.ViewGroup
 import android.widget.*
 import com.bumptech.glide.Glide
+import com.bumptech.glide.request.RequestOptions
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageReference
 import com.mishenka.cookingstuff.data.*
+import com.mishenka.cookingstuff.interfaces.IngredientListener
 import com.mishenka.cookingstuff.interfaces.StepListener
 import com.mishenka.cookingstuff.services.ImprovedUploadService
 import com.mishenka.cookingstuff.services.TempSupportUploadService
 import com.mishenka.cookingstuff.utils.MainApplication
+import com.mishenka.cookingstuff.utils.MoveViewTouchListener
 import com.mishenka.cookingstuff.utils.Utils
 import com.mishenka.cookingstuff.utils.database.CookingDatabase
 import com.mishenka.cookingstuff.utils.database.DbWorkerThread
@@ -38,7 +41,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 
 
-class AddRecipeActivity : AppCompatActivity(), StepListener {
+class AddRecipeActivity : AppCompatActivity(), StepListener, IngredientListener {
     private val mIngredientsList: ArrayList<Ingredient> = arrayListOf(Ingredient(false), Ingredient(false), Ingredient(false))
     private val mStepsList: ArrayList<Step> = arrayListOf(Step(), Step(), Step())
 
@@ -75,13 +78,18 @@ class AddRecipeActivity : AppCompatActivity(), StepListener {
             }
         }
 
+        val ivMainPic = findViewById<ImageView>(R.id.iv_main_pic)
+        ivMainPic.visibility = View.GONE
+
         val params = LinearLayout.LayoutParams (
                 LinearLayout.LayoutParams.MATCH_PARENT,
                 LinearLayout.LayoutParams.WRAP_CONTENT
         )
         val vgIngredients = findViewById<ViewGroup>(R.id.insert_ingredients)
         for (ingredient in mIngredientsList) {
-            vgIngredients.addView(IngredientView(ingredient, this), params)
+            val iv = IngredientView(ingredient, this)
+            iv.setOnTouchListener(MoveViewTouchListener(iv))
+            vgIngredients.addView(iv, params)
         }
         val vgSteps = findViewById<ViewGroup>(R.id.insert_steps)
         for (step in mStepsList) {
@@ -103,7 +111,9 @@ class AddRecipeActivity : AppCompatActivity(), StepListener {
         val bAddIngredient = findViewById<Button>(R.id.b_add_ingredient)
         bAddIngredient.setOnClickListener {
             mIngredientsList.add(Ingredient(false))
-            vgIngredients.addView(IngredientView(mIngredientsList.last(), this), params)
+            val iv = IngredientView(mIngredientsList.last(), this)
+            iv.setOnTouchListener(MoveViewTouchListener(iv))
+            vgIngredients.addView(iv, params)
         }
 
         mSubmitButton = findViewById(R.id.b_add_recipe)
@@ -121,9 +131,10 @@ class AddRecipeActivity : AppCompatActivity(), StepListener {
         val user = FirebaseAuth.getInstance().currentUser!!
         val username = user.displayName
         val userID = user.uid
+        val recDesc = findViewById<EditText>(R.id.et_recipe_description).text?.toString()
         mLocalDb = CookingDatabase.getInstance(MainApplication.applicationContext())
         val persistableParcelable = PersistableParcelable<UploadData>(mLocalDb!!)
-        val uploadData = UploadData(name = recipeName, authorUID = userID, author = username,
+        val uploadData = UploadData(name = recipeName, authorUID = userID, author = username, description = recDesc,
                 mainPicUri = mMainPicUri?.toString(), ingredientsList = mIngredientsList, stepsList = mStepsList)
         val dataId = recipeName + System.currentTimeMillis()
         GlobalScope.async {
@@ -181,6 +192,20 @@ class AddRecipeActivity : AppCompatActivity(), StepListener {
         showPictureDialog(STEP_GALLERY, STEP_CAMERA)
     }
 
+    override fun onStepClearButtonClicked(v: View) {
+        val parent = (v.parent as ViewGroup)
+        val pos = parent.indexOfChild(v)
+        parent.removeViewAt(pos)
+        mStepsList.removeAt(pos)
+    }
+
+    override fun onIngredientClearButtonClicked(v: View) {
+        val parent = (v.parent as ViewGroup)
+        val pos = parent.indexOfChild(v)
+        parent.removeViewAt(pos)
+        mIngredientsList.removeAt(pos)
+    }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (resultCode == Activity.RESULT_CANCELED) {
@@ -190,6 +215,7 @@ class AddRecipeActivity : AppCompatActivity(), StepListener {
             MAIN_GALLERY -> data?.let {intent ->
                 mMainPicUri = intent.data
                 val ivMainPic = findViewById<ImageView>(R.id.iv_main_pic)
+                ivMainPic.visibility = View.VISIBLE
                 Glide.with(ivMainPic.context)
                         .load(mMainPicUri)
                         .into(ivMainPic)
@@ -207,6 +233,7 @@ class AddRecipeActivity : AppCompatActivity(), StepListener {
                                 fp.visibility = View.VISIBLE
                                 Glide.with(fp.context)
                                         .load(currentStepPicUri)
+                                        .apply(RequestOptions().centerCrop())
                                         .into(fp)
                             }
                         }
@@ -217,6 +244,7 @@ class AddRecipeActivity : AppCompatActivity(), StepListener {
                                 sp.visibility = View.VISIBLE
                                 Glide.with(sp.context)
                                         .load(currentStepPicUri)
+                                        .apply(RequestOptions().centerCrop())
                                         .into(sp)
                             }
                         }
@@ -227,6 +255,7 @@ class AddRecipeActivity : AppCompatActivity(), StepListener {
                                 tp.visibility = View.VISIBLE
                                 Glide.with(tp.context)
                                         .load(currentStepPicUri)
+                                        .apply(RequestOptions().centerCrop())
                                         .into(tp)
                             }
                         }
