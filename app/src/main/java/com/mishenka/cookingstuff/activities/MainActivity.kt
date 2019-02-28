@@ -4,6 +4,7 @@ import android.content.Intent
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
 import android.support.v4.content.ContextCompat
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Button
@@ -16,7 +17,6 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.mishenka.cookingstuff.R
-import com.mishenka.cookingstuff.fragments.BookmarkFragment
 import com.mishenka.cookingstuff.fragments.ChatFragment
 import com.mishenka.cookingstuff.fragments.HomeFragment
 import com.mishenka.cookingstuff.fragments.MeFragment
@@ -53,7 +53,7 @@ class MainActivity : AppCompatActivity(), HomeFragment.HomeFragmentListener {
         findViewById<Button>(R.id.tab_button_bookmark).setOnClickListener {
             val currentBookmarkFragment = supportFragmentManager.findFragmentByTag(BOOKMARK_TAG)
             if (currentBookmarkFragment == null) {
-                supportFragmentManager.beginTransaction().replace(R.id.fragment_container, BookmarkFragment.newInstance(), BOOKMARK_TAG).commit()
+                supportFragmentManager.beginTransaction().replace(R.id.fragment_container, HomeFragment.newInstance(Utils.BOOKMARK_FRAGMENT_OPTION), BOOKMARK_TAG).commit()
             }
         }
 

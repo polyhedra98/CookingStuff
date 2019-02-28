@@ -16,6 +16,7 @@ object Utils {
 
     //other
     const val IMAGE_CONTENT_TYPE = "image/jpg"
+    const val BOOKMARK_FRAGMENT_OPTION = "bookmark"
 
     //db
     const val DB_NAME = "cooking_database"
@@ -31,10 +32,12 @@ object Utils {
     const val CHILD_COOKING_PHOTOS = "cooking_pictures"
     const val CHILD_RECIPE_NAME = "name"
     const val CHILD_RECIPE_AUTHOR = "author"
+    const val CHILD_RECIPE_COMMENTS = "commentsAllowed"
     const val CHILD_RECIPE_MAIN_PIC_URL = "mainPicUrl"
     const val CHILD_RECIPE_DESCRIPTION = "description"
     const val CHILD_RECIPE_READ_COUNT = "readCount"
     const val CHILD_RECIPE_STAR_COUNT = "starCount"
     const val WHOLE_RECIPE_INGREDIENTS_LIST_CHILD = "ingredientsList"
     const val WHOLE_RECIPE_STEPS_LIST_CHILD = "stepsList"
+    const val WHOLE_RECIPE_COMMENTS = "comments"
 }

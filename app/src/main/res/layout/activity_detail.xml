@@ -13,6 +13,12 @@
         android:orientation="vertical">
 
         <LinearLayout
+            android:focusable="true"
+            android:focusableInTouchMode="true"
+            android:layout_width="0px"
+            android:layout_height="0px"/>
+
+        <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:background="@android:drawable/dialog_holo_light_frame"
@@ -67,7 +73,8 @@
             android:layout_height="wrap_content"
             android:background="@android:drawable/dialog_holo_light_frame"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="16dp"
+            android:visibility="gone">
 
             <TextView
                 android:id="@+id/tv_detail_ingredients"
@@ -75,11 +82,11 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom"
                 android:layout_marginBottom="8dp"
-                android:textColor="@color/colorPrimary"
                 android:shadowColor="#000000"
                 android:shadowRadius="0.5"
-                android:textSize="18sp"
-                android:text="Ingredients:" />
+                android:text="Ingredients:"
+                android:textColor="@color/colorPrimary"
+                android:textSize="18sp" />
 
             <LinearLayout
                 android:id="@+id/detail_ingredients"
@@ -94,7 +101,8 @@
             android:layout_height="wrap_content"
             android:background="@android:drawable/dialog_holo_light_frame"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="16dp"
+            android:visibility="gone">
 
             <TextView
                 android:id="@+id/tv_detail_steps"
@@ -102,14 +110,43 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="bottom"
                 android:layout_marginBottom="8dp"
-                android:textColor="@color/colorPrimary"
                 android:shadowColor="#000000"
                 android:shadowRadius="0.5"
-                android:textSize="18sp"
-                android:text="Steps:" />
+                android:text="Steps:"
+                android:textColor="@color/colorPrimary"
+                android:textSize="18sp" />
 
             <LinearLayout
                 android:id="@+id/detail_steps"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/detail_outer_comments"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@android:drawable/dialog_holo_light_frame"
+            android:orientation="vertical"
+            android:padding="16dp"
+            android:visibility="gone">
+
+            <TextView
+                android:id="@+id/tv_detail_comments"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="bottom"
+                android:layout_marginBottom="8dp"
+                android:shadowColor="#000000"
+                android:shadowRadius="0.5"
+                android:text="Comments:"
+                android:textColor="@color/colorPrimary"
+                android:textSize="18sp" />
+
+
+            <LinearLayout
+                android:id="@+id/detail_comments"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical" />

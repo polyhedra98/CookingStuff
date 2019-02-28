@@ -5,6 +5,7 @@ import android.os.Bundle
 import android.support.v4.app.Fragment
 import android.support.v4.content.ContextCompat
 import android.support.v7.widget.RecyclerView
+import android.util.Log
 import android.view.*
 import android.widget.ImageButton
 import android.widget.ImageView
@@ -39,20 +40,16 @@ class HomeFragment : Fragment() {
     private var param2: String? = null
     private var listener: HomeFragmentListener? = null
 
-    private lateinit var mFirebaseRecipeAdapter : FirebaseRecyclerAdapter<Recipe, RecipeViewHolder>
-    private lateinit var mQuery : Query
-    private lateinit var mrvRecipes : RecyclerView
-    private lateinit var mContext : Context
+    private lateinit var mFirebaseRecipeAdapter: FirebaseRecyclerAdapter<Recipe, RecipeViewHolder>
+    private lateinit var mQuery: Query
+    private lateinit var mrvRecipes: RecyclerView
+    private lateinit var mContext: Context
     private lateinit var mdbRecipesReference: DatabaseReference
 
-    private var mChildEventListener : ChildEventListener? = null
+    private var mChildEventListener: ChildEventListener? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        /*arguments?.let {
-            param1 = it.getString(ARG_PARAM1)
-            param2 = it.getString(ARG_PARAM2)
-        }*/
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?,
@@ -60,7 +57,7 @@ class HomeFragment : Fragment() {
         val returnView = inflater.inflate(R.layout.fragment_home, container, false)
         mrvRecipes = returnView.findViewById(R.id.rv_recipes)
         mrvRecipes.adapter = mFirebaseRecipeAdapter
-        return  returnView
+        return returnView
     }
 
 
@@ -72,8 +69,24 @@ class HomeFragment : Fragment() {
         } else {
             //throw RuntimeException(context.toString() + " must implement HomeFragmentListener")
         }
+        arguments?.let {
+            param1 = it.getString(ARG_PARAM1)
+            //param2 = it.getString(ARG_PARAM2)
+        }
         mdbRecipesReference = FirebaseDatabase.getInstance().reference.child(Utils.CHILD_RECIPE)
-        mQuery = mdbRecipesReference
+        mQuery = if (param1 == Utils.BOOKMARK_FRAGMENT_OPTION) {
+            val user = FirebaseAuth.getInstance().currentUser
+            if (user != null) {
+                val dbStarredPostsReference = FirebaseDatabase.getInstance().reference.child(Utils.CHILD_USER).child(user.uid).child(Utils.CHILD_STARRED_POSTS)
+                //TODO("Finish")
+
+                mdbRecipesReference
+            } else {
+                mdbRecipesReference
+            }
+        } else {
+            mdbRecipesReference
+        }
         val options = FirebaseRecyclerOptions.Builder<Recipe>().setQuery(mQuery, Recipe::class.java).build()
         //TODO("For some reason shows prev picture if no other is provided")
         mFirebaseRecipeAdapter = object : FirebaseRecyclerAdapter<Recipe, RecipeViewHolder>(options) {
@@ -186,7 +199,7 @@ class HomeFragment : Fragment() {
         }
     }
 
-    private class RecipeViewHolder(recipeView : View) : RecyclerView.ViewHolder(recipeView) {
+    class RecipeViewHolder(recipeView : View) : RecyclerView.ViewHolder(recipeView) {
         val upperRecipe = recipeView.findViewById<UpperRecipeView>(R.id.ur_recipe)
         val tvRecipeName = upperRecipe.findViewById<TextView>(R.id.tv_upper_recipe_name)
         val tvAuthorName = upperRecipe.findViewById<TextView>(R.id.tv_upper_author_name)
@@ -203,13 +216,12 @@ class HomeFragment : Fragment() {
 
     companion object {
         @JvmStatic
-        fun newInstance() =
-                /*HomeFragment().apply {
+        fun newInstance(param1: String? = null) =
+                HomeFragment().apply {
                     arguments = Bundle().apply {
                         putString(ARG_PARAM1, param1)
-                        putString(ARG_PARAM2, param2)
+                        //putString(ARG_PARAM2, param2)
                     }
-                }*/
-                HomeFragment()
+                }
     }
 }

@@ -26,8 +26,7 @@
             android:layout_marginTop="10dp"
             android:drawableLeft="@drawable/ic_eye_24px"
             android:drawableStart="@drawable/ic_eye_24px"
-            android:drawablePadding="4dp"
-            />
+            android:drawablePadding="4dp" />
 
         <ImageButton
             android:id="@+id/b_star"

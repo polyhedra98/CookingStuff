@@ -15,7 +15,7 @@ import com.mishenka.cookingstuff.utils.listeners.OnStepAddButtonClickListener
 
 class StepView : LinearLayout {
     private val mStep: Step
-    private val mStepListener : StepListener?
+    private val mStepListener: StepListener?
 
     constructor(step: Step, context: Context?) : super(context) {
         mStep = step
