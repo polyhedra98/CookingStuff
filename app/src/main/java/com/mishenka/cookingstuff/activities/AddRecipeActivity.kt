@@ -137,7 +137,7 @@ class AddRecipeActivity : AppCompatActivity(), StepListener, IngredientListener 
         val persistableParcelable = PersistableParcelable<UploadData>(mLocalDb!!)
         val uploadData = UploadData(name = recipeName, authorUID = userID, author = username, description = recDesc,
                 mainPicUri = mMainPicUri?.toString(), commentsAllowed = commentsAllowed,ingredientsList = mIngredientsList, stepsList = mStepsList)
-        val dataId = recipeName + System.currentTimeMillis()
+        val dataId = System.currentTimeMillis().toString()
         GlobalScope.async {
             persistableParcelable.save(dataId, uploadData)
             trySchedulingJob(dataId)

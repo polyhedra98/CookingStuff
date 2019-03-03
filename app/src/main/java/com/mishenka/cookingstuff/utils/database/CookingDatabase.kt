@@ -6,9 +6,10 @@ import android.arch.persistence.room.RoomDatabase
 import android.content.Context
 import com.mishenka.cookingstuff.utils.Utils
 
-@Database(entities = arrayOf(Parcelized::class), version = 1)
+@Database(entities = arrayOf(Parcelized::class, Bookmark::class), version = 1)
 abstract class CookingDatabase: RoomDatabase() {
     abstract fun parcelizedDao(): ParcelizedDao
+    abstract fun bookmarkDao(): BookmarkDao
 
     companion object {
         private var INSTANCE: CookingDatabase? = null

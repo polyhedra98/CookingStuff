@@ -55,7 +55,7 @@ class DetailActivity : AppCompatActivity(), CommentListener {
                 try {
                     val stepsList = p0.child(Utils.WHOLE_RECIPE_STEPS_LIST_CHILD).value
                     if (stepsList != null) {
-                        val vgOuterSteps= findViewById<ViewGroup>(R.id.detail_outer_steps)
+                        val vgOuterSteps = findViewById<ViewGroup>(R.id.detail_outer_steps)
                         vgOuterSteps.visibility = View.VISIBLE
                         val mapper = Klaxon()
                         val stepsDict = mapper.parseArray<NonParcelableStep?>(mapper.toJsonString(stepsList))
@@ -158,6 +158,17 @@ class DetailActivity : AppCompatActivity(), CommentListener {
 
                         override fun onDataChange(p0: DataSnapshot) {
                             //TODO("Fix")
+                            //TODO("One way to fix:")
+                            /*if (p0.hasChildren()) {
+                                val iterator = p0.children.iterator()
+                                while (iterator.hasNext()) {
+                                    val snapshot = iterator.next()
+                                    snapshot.key?.let { safeKey ->
+                                        starredPostsKeys.add(safeKey)
+                                    }
+                                }
+                            }*/
+
 //Comments list: {-LZ_MYlKH4KtTsMnd5kp={userAvatarUrl=https://lh3.googleusercontent.com/-yhtBJ8DjfeE/AAAAAAAAAAI/AAAAAAAAABg/rTbHxuiwDsw/s96-c/photo.jpg, text=first.}, -LZ_Peh5aO9c1hVzCufP={userAvatarUrl=https://lh3.googleusercontent.com/-yhtBJ8DjfeE/AAAAAAAAAAI/AAAAAAAAABg/rTbHxuiwDsw/s96-c/photo.jpg, text=Cookiezi, come back pls UwU..}}
 //Ingredient list: [{text=I1, separator=false}, {text=I3, separator=false}, {text=S1, separator=true}]
 //Even never comments: [{userAvatarUrl=https://lh3.googleusercontent.com/-yhtBJ8DjfeE/AAAAAAAAAAI/AAAAAAAAABg/rTbHxuiwDsw/s96-c/photo.jpg, text=first.}, {userAvatarUrl=https://lh3.googleusercontent.com/-yhtBJ8DjfeE/AAAAAAAAAAI/AAAAAAAAABg/rTbHxuiwDsw/s96-c/photo.jpg, text=Cookiezi, come back pls UwU..}]

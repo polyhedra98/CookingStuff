@@ -4,10 +4,10 @@ import android.os.Parcel
 import android.os.Parcelable
 
 data class Step(
-        var stepDescription : String? = null,
-        var firstPicUri : String? = null,
-        var secondPicUri : String? = null,
-        var thirdPicUri : String? = null
+        var stepDescription: String? = null,
+        var firstPicUri: String? = null,
+        var secondPicUri: String? = null,
+        var thirdPicUri: String? = null
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
             parcel.readString(),

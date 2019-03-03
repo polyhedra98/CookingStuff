@@ -3,7 +3,8 @@ package com.mishenka.cookingstuff.data
 import android.os.Parcel
 import android.os.Parcelable
 
-data class UploadData (
+data class BookmarkData (
+        val key: String,
         val name: String,
         val authorUID: String,
         val author: String? = null,
@@ -14,6 +15,7 @@ data class UploadData (
         val stepsList: List<Step>? = null
 ) : Parcelable {
     constructor(parcel: Parcel) : this(
+            parcel.readString()!!,
             parcel.readString()!!,
             parcel.readString()!!,
             parcel.readString(),
@@ -29,6 +31,7 @@ data class UploadData (
     )
 
     override fun writeToParcel(dest: Parcel?, flags: Int) {
+        dest?.writeString(key)
         dest?.writeString(name)
         dest?.writeString(authorUID)
         dest?.writeString(author)
@@ -47,12 +50,12 @@ data class UploadData (
         return 0
     }
 
-    companion object CREATOR : Parcelable.Creator<UploadData> {
-        override fun createFromParcel(source: Parcel): UploadData {
-            return UploadData(source)
+    companion object CREATOR : Parcelable.Creator<BookmarkData> {
+        override fun createFromParcel(source: Parcel): BookmarkData {
+            return BookmarkData(source)
         }
 
-        override fun newArray(size: Int): Array<UploadData?> {
+        override fun newArray(size: Int): Array<BookmarkData?> {
             return arrayOfNulls(size)
         }
     }

@@ -15,13 +15,19 @@ object Utils {
     const val UPLOAD_SERVICE_TAG = "upload_service_tag"
 
     //other
+    const val RESERVED_CHARS = "[|?*<\":>+/'%=\\-&.]"
     const val IMAGE_CONTENT_TYPE = "image/jpg"
     const val BOOKMARK_FRAGMENT_OPTION = "bookmark"
+    const val HOME_FRAGMENT_OPTION = "home"
+    const val IMAGES_DIR = "images"
 
     //db
     const val DB_NAME = "cooking_database"
     const val DB_UPLOAD_DATA_TABLE = "upload_data_table"
+    const val DB_BOOKMARK_TABLE = "bookmark_table"
     const val DB_UPLOAD_DATA_ID = "id"
+    const val DB_BOOKMARK_ID = "id"
+    const val DB_BOOKMARK_DATA = "data"
     const val DB_UPLOAD_DATA_CREATION = "creation_timestamp"
     const val DB_UPLOAD_DATA_EXPIRATION = "expiration_timestamp"
     const val DB_UPLOAD_DATA_DATA = "data"
@@ -32,6 +38,7 @@ object Utils {
     const val CHILD_COOKING_PHOTOS = "cooking_pictures"
     const val CHILD_RECIPE_NAME = "name"
     const val CHILD_RECIPE_AUTHOR = "author"
+    const val CHILD_RECIPE_AUTHOR_UID = "authorUID"
     const val CHILD_RECIPE_COMMENTS = "commentsAllowed"
     const val CHILD_RECIPE_MAIN_PIC_URL = "mainPicUrl"
     const val CHILD_RECIPE_DESCRIPTION = "description"
