@@ -32,6 +32,10 @@
             android:name=".services.TempSupportUploadService"
             android:exported="false"
             />
+        <service
+            android:name=".services.TempSupportBookmarkService"
+            android:exported="false"
+            />
     </application>
 
 </manifest>

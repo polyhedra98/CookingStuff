@@ -24,7 +24,9 @@ import com.mishenka.cookingstuff.utils.Utils
 import com.mishenka.cookingstuff.utils.database.CookingDatabase
 import com.mishenka.cookingstuff.utils.database.PersistableBookmark
 import com.mishenka.cookingstuff.views.UpperRecipeView
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 
 private const val ARG_PARAM1 = "param1"
@@ -138,15 +140,15 @@ class HomeFragment : Fragment() {
             }
             attachDatabaseListener()
         } else if (param1 == Utils.BOOKMARK_FRAGMENT_OPTION) {
-            //TODO("Retrieve bookmarks")
             var bookmarks = ArrayList<BookmarkData>()
             val db = CookingDatabase.getInstance(MainApplication.applicationContext())
             val persistableBookmark = PersistableBookmark<BookmarkData>(db!!)
-            GlobalScope.launch {
-                persistableBookmark.loadBookmarks(BookmarkData.CREATOR)?.let { safeBookmarks ->
-                    bookmarks = ArrayList(safeBookmarks)
-                }
-            }.invokeOnCompletion {
+            GlobalScope.launch(Dispatchers.Main) {
+                GlobalScope.launch(Dispatchers.Default) {
+                    persistableBookmark.loadBookmarks(BookmarkData.CREATOR)?.let { safeBookmarks ->
+                        bookmarks = ArrayList(safeBookmarks)
+                    }
+                }.join()
                 mCachedRecipeAdapter?.notifyDataSetChanged()
             }
 
@@ -176,7 +178,7 @@ class HomeFragment : Fragment() {
                         holder.ivMainPicture.visibility = View.GONE
                     }
                     holder.upperRecipe.setOnClickListener {
-                        listener?.onRecyclerItemClicked(bookmarks[position].key)
+                        listener?.onRecyclerItemClicked(bookmarks[position].key, true)
                     }
                 }
             }
@@ -256,8 +258,8 @@ class HomeFragment : Fragment() {
     }
 
     interface HomeFragmentListener {
-        fun onRecyclerItemClicked(recipeKey : String?)
-        fun onStarButtonClicked(recipeKey : String?, view : ImageButton)
+        fun onRecyclerItemClicked(recipeKey: String?, isBookmarked: Boolean? = null)
+        fun onStarButtonClicked(recipeKey: String?, view : ImageButton)
     }
 
     companion object {

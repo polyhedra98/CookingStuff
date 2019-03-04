@@ -9,7 +9,10 @@ object Utils {
 
     //keys
     const val RECIPE_ID_KEY = "recipe_id_key"
+    const val IS_BOOKMARKED_KEY = "bookmarked"
     const val UPLOAD_DATA_KEY = "upload_data_key"
+    const val BOOKMARK_DATA_KEY = "bookmark_data_key"
+    const val BOOKMARK_UID_KEY = "bookmark_uid_key"
 
     //tags
     const val UPLOAD_SERVICE_TAG = "upload_service_tag"
@@ -47,4 +50,8 @@ object Utils {
     const val WHOLE_RECIPE_INGREDIENTS_LIST_CHILD = "ingredientsList"
     const val WHOLE_RECIPE_STEPS_LIST_CHILD = "stepsList"
     const val WHOLE_RECIPE_COMMENTS = "comments"
+    const val STEP_SNAPSHOT_DESCRIPTION = "stepDescription"
+    const val STEP_SNAPSHOT_PIC_URLS = "picUrls"
+    const val INGREDIENT_SNAPSHOT_TEXT = "text"
+    const val INGREDIENT_SNAPSHOT_SEPARATOR = "separator"
 }
