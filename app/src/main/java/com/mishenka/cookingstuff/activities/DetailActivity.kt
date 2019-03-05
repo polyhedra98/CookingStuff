@@ -29,7 +29,9 @@ import com.mishenka.cookingstuff.views.CommentView
 import com.mishenka.cookingstuff.views.NonInteractiveCommentView
 import com.mishenka.cookingstuff.views.NonInteractiveIngredientView
 import com.mishenka.cookingstuff.views.NonInteractiveStepView
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import java.lang.Exception
 
@@ -53,9 +55,8 @@ class DetailActivity : AppCompatActivity(), CommentListener {
             val db = CookingDatabase.getInstance(MainApplication.applicationContext())
             val persistableBookmark = PersistableBookmark<BookmarkData>(db!!)
             var bookmark: BookmarkData? = null
-            GlobalScope.launch {
-                bookmark = persistableBookmark.loadBookmark(mRecipeKey!!, BookmarkData.CREATOR)
-            }.invokeOnCompletion {
+            GlobalScope.launch(Dispatchers.Main) {
+                bookmark = GlobalScope.async { persistableBookmark.loadBookmark(mRecipeKey!!, BookmarkData.CREATOR) }.await()
                 if (bookmark != null) {
                     val recipeName = bookmark?.name
                     recipeName?.let { safeName ->

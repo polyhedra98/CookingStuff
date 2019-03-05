@@ -51,54 +51,63 @@ class TempSupportBookmarkService : IntentService(TempSupportBookmarkService::cla
                         stepsDeferred = GlobalScope.async {
                             val stepsToReturn = ArrayList<Step>()
                             for (step in stepsDict) {
-                                step?.picUrls?.let { safePicUrls ->
-                                    for (url in safePicUrls) {
-                                        val requestOptions = RequestOptions().override(100)
-                                                .skipMemoryCache(true)
-                                                .diskCacheStrategy(DiskCacheStrategy.NONE)
-                                        //TODO("This one can be done more async, but performance boost is quite questionable)
-                                        val bitmap = Glide.with(this@TempSupportBookmarkService)
-                                                .asBitmap()
-                                                .load(url)
-                                                .apply(requestOptions)
-                                                .submit()
-                                                .get()
-                                        try {
-                                            val folder = File("${MainApplication.applicationContext().getDir(Utils.IMAGES_DIR, Context.MODE_PRIVATE)}")
-                                            if (!folder.exists()) {
-                                                folder.mkdir()
-                                            }
-                                            val file = File(folder.absolutePath + "/${url.replace(Utils.RESERVED_CHARS.toRegex(), "_")}.jpg")
-                                            if (!file.exists()) {
-                                                file.createNewFile()
-                                            }
-                                            val out = FileOutputStream(file)
-                                            bitmap.compress(Bitmap.CompressFormat.JPEG, 85, out)
-                                            out.flush()
-                                            out.close()
-                                            Log.i("NYA", "$step saved")
-
-                                            val stepToReturn = Step(step.stepDescription)
-                                            step.picUrls?.let {
-                                                when {
-                                                    safePicUrls.size == 1 -> stepToReturn.firstPicUri = "${safePicUrls[0].replace(Utils.RESERVED_CHARS.toRegex(), "_")}.jpg"
-                                                    safePicUrls.size == 2 -> {
-                                                        stepToReturn.firstPicUri = "${safePicUrls[0].replace(Utils.RESERVED_CHARS.toRegex(), "_")}.jpg"
-                                                        stepToReturn.secondPicUri = "${safePicUrls[1].replace(Utils.RESERVED_CHARS.toRegex(), "_")}.jpg"
-                                                    }
-                                                    safePicUrls.size == 3 -> {
-                                                        stepToReturn.firstPicUri = "${safePicUrls[0].replace(Utils.RESERVED_CHARS.toRegex(), "_")}.jpg"
-                                                        stepToReturn.secondPicUri = "${safePicUrls[1].replace(Utils.RESERVED_CHARS.toRegex(), "_")}.jpg"
-                                                        stepToReturn.thirdPicUri = "${safePicUrls[2].replace(Utils.RESERVED_CHARS.toRegex(), "_")}.jpg"
-                                                    }
+                                val folder = File("${MainApplication.applicationContext().getDir(Utils.IMAGES_DIR, Context.MODE_PRIVATE)}")
+                                if (!folder.exists()) {
+                                    folder.mkdir()
+                                }
+                                step?.let { safeStep ->
+                                    safeStep.picUrls?.let { safePicUrls ->
+                                        for (url in safePicUrls) {
+                                            try {
+                                                val reservedSafeUrl = url.replace(Utils.RESERVED_CHARS.toRegex(), "_")
+                                                val file = File("${folder.absolutePath}/${reservedSafeUrl.substring(0, reservedSafeUrl.indexOf("_alt_media_token_"))}.jpg")
+                                                if (!file.exists()) {
+                                                    file.createNewFile()
+                                                    val requestOptions = RequestOptions()
+                                                            .skipMemoryCache(true)
+                                                            .diskCacheStrategy(DiskCacheStrategy.NONE)
+                                                    //TODO("This one can be done more async, but performance boost is quite questionable)
+                                                    val bitmap = Glide.with(this@TempSupportBookmarkService)
+                                                            .asBitmap()
+                                                            .load(url)
+                                                            .apply(requestOptions)
+                                                            .submit()
+                                                            .get()
+                                                    val out = FileOutputStream(file)
+                                                    bitmap.compress(Bitmap.CompressFormat.JPEG, 85, out)
+                                                    out.flush()
+                                                    out.close()
                                                 }
+                                                Log.i("NYA", "Step pic ${file.absolutePath} saved")
+                                            } catch (e: Exception) {
+                                                Log.i("NYA", "Error saving step $step")
                                             }
-                                            stepsToReturn.add(stepToReturn)
-                                        } catch (e: Exception) {
-                                            Log.i("NYA", "Error saving step $step")
                                         }
                                     }
-
+                                    val stepToReturn = Step(safeStep.stepDescription)
+                                    safeStep.picUrls?.let { safePicUrls ->
+                                        when {
+                                            safePicUrls.size == 1 -> {
+                                                val fReservedSafe = safePicUrls[0].replace(Utils.RESERVED_CHARS.toRegex(), "_")
+                                                stepToReturn.firstPicUri = "${folder.absolutePath}/${fReservedSafe.substring(0, fReservedSafe.indexOf("_alt_media_token_"))}.jpg"
+                                            }
+                                            safePicUrls.size == 2 -> {
+                                                val fReservedSafe = safePicUrls[0].replace(Utils.RESERVED_CHARS.toRegex(), "_")
+                                                val sReservedSafe = safePicUrls[1].replace(Utils.RESERVED_CHARS.toRegex(), "_")
+                                                stepToReturn.firstPicUri = "${folder.absolutePath}/${fReservedSafe.substring(0, fReservedSafe.indexOf("_alt_media_token_"))}.jpg"
+                                                stepToReturn.secondPicUri = "${folder.absolutePath}/${sReservedSafe.substring(0, sReservedSafe.indexOf("_alt_media_token_"))}.jpg"
+                                            }
+                                            safePicUrls.size == 3 -> {
+                                                val fReservedSafe = safePicUrls[0].replace(Utils.RESERVED_CHARS.toRegex(), "_")
+                                                val sReservedSafe = safePicUrls[1].replace(Utils.RESERVED_CHARS.toRegex(), "_")
+                                                val tReservedSafe = safePicUrls[2].replace(Utils.RESERVED_CHARS.toRegex(), "_")
+                                                stepToReturn.firstPicUri = "${folder.absolutePath}/${fReservedSafe.substring(0, fReservedSafe.indexOf("_alt_media_token_"))}.jpg"
+                                                stepToReturn.secondPicUri = "${folder.absolutePath}/${sReservedSafe.substring(0, sReservedSafe.indexOf("_alt_media_token_"))}.jpg"
+                                                stepToReturn.thirdPicUri = "${folder.absolutePath}/${tReservedSafe.substring(0, tReservedSafe.indexOf("_alt_media_token_"))}.jpg"
+                                            }
+                                        }
+                                    }
+                                    stepsToReturn.add(stepToReturn)
                                 }
                             }
                             return@async stepsToReturn
@@ -145,33 +154,35 @@ class TempSupportBookmarkService : IntentService(TempSupportBookmarkService::cla
                 val currentMainPicUrl = p0.child(Utils.CHILD_RECIPE_MAIN_PIC_URL).value
                 currentMainPicUrl?.let { safeMainPicUrl ->
                     mainPicDeferred = GlobalScope.async {
-                        val requestOptions = RequestOptions().override(100)
-                                .skipMemoryCache(true)
-                                .diskCacheStrategy(DiskCacheStrategy.NONE)
-                        val bitmap = Glide.with(this@TempSupportBookmarkService)
-                                .asBitmap()
-                                .load(safeMainPicUrl)
-                                .apply(requestOptions)
-                                .submit()
-                                .get()
                         try {
-                            val mFolder = File("${MainApplication.applicationContext().getDir(Utils.IMAGES_DIR, Context.MODE_PRIVATE)}")
-                            if (!mFolder.exists()) {
-                                mFolder.mkdir()
+                            val folder = File("${MainApplication.applicationContext().getDir(Utils.IMAGES_DIR, Context.MODE_PRIVATE)}")
+                            if (!folder.exists()) {
+                                folder.mkdir()
                             }
-                            val imgFile = File(mFolder.absolutePath + "/${safeMainPicUrl.toString().replace(Utils.RESERVED_CHARS.toRegex(), "_")}.jpg")
-                            if (!imgFile.exists()) {
-                                imgFile.createNewFile()
+                            val reservedSafeUrl = safeMainPicUrl.toString().replace(Utils.RESERVED_CHARS.toRegex(), "_")
+                            val file = File("${folder.absolutePath}/${reservedSafeUrl.substring(0, reservedSafeUrl.indexOf("_alt_media_token_"))}.jpg")
+                            if (!file.exists()) {
+                                file.createNewFile()
+                                val requestOptions = RequestOptions()
+                                        .skipMemoryCache(true)
+                                        .diskCacheStrategy(DiskCacheStrategy.NONE)
+                                val bitmap = Glide.with(this@TempSupportBookmarkService)
+                                        .asBitmap()
+                                        .load(safeMainPicUrl)
+                                        .apply(requestOptions)
+                                        .submit()
+                                        .get()
+                                val out = FileOutputStream(file)
+                                bitmap.compress(Bitmap.CompressFormat.JPEG, 85, out)
+                                out.flush()
+                                out.close()
                             }
-                            val out = FileOutputStream(imgFile)
-                            bitmap.compress(Bitmap.CompressFormat.JPEG, 85, out)
-                            out.flush()
-                            out.close()
-                            Log.i("NYA", "Main pic $safeMainPicUrl saved")
-                            return@async "${safeMainPicUrl.toString().replace(Utils.RESERVED_CHARS.toRegex(), "_")}.jpg"
+                            Log.i("NYA", "Main pic ${file.absolutePath} saved")
+                            return@async file.absolutePath
                         } catch (e: Exception) {
                             Log.i("NYA", "Error saving main pic $safeMainPicUrl")
-                            Log.i("NYA", "Tried to save ${safeMainPicUrl.toString().replace(Utils.RESERVED_CHARS.toRegex(), "_")}.jpg")
+                            val reservedSafeUrl = safeMainPicUrl.toString().replace(Utils.RESERVED_CHARS.toRegex(), "_")
+                            Log.i("NYA", "Tried to save ${reservedSafeUrl.substring(0, reservedSafeUrl.indexOf("_alt_media_token_"))}.jpg")
                             e.printStackTrace()
                             return@async null
                         }
