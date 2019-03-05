@@ -101,6 +101,7 @@ class HomeFragment : Fragment() {
                 override fun onBindViewHolder(holder: RecipeViewHolder, position: Int, model: Recipe) {
                     holder.tvRecipeName.text = model.name
                     holder.tvAuthorName.text = model.author
+                    holder.tvRecipeDescription.text = model.description
                     holder.tvWatchCount.text = "${model.readCount}"
                     if (model.mainPicUrl != null && model.mainPicUrl != "") {
                         holder.ivMainPicture.visibility = View.VISIBLE
@@ -167,7 +168,7 @@ class HomeFragment : Fragment() {
                     val model = bookmarks[position]
                     holder.tvRecipeName.text = model.name
                     holder.tvAuthorName.text = model.author
-                    holder.tvWatchCount.text = "TODO"
+                    holder.tvRecipeDescription.text = model.description
                     if (model.mainPicUri != null && model.mainPicUri != "") {
                         holder.ivMainPicture.visibility = View.VISIBLE
                         Glide.with(holder.ivMainPicture.context)
@@ -177,6 +178,23 @@ class HomeFragment : Fragment() {
                     } else {
                         holder.ivMainPicture.visibility = View.GONE
                     }
+                    //TODO("Calling this for each bookmark seems far from being ok")
+                    val recipeRef = FirebaseDatabase.getInstance().reference.child(Utils.CHILD_RECIPE).child(model.key).child(Utils.CHILD_RECIPE_READ_COUNT)
+                    recipeRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                        override fun onCancelled(p0: DatabaseError) {
+                            throw p0.toException()
+                        }
+
+                        override fun onDataChange(p0: DataSnapshot) {
+                            holder.tvWatchCount.text = p0.value?.toString()
+                        }
+                    })
+
+                    holder.bStar.setImageDrawable(ContextCompat.getDrawable(MainApplication.applicationContext(), R.drawable.star_checked))
+                    holder.bStar.setOnClickListener {
+                        listener?.onStarButtonClicked(model.key, it as ImageButton)
+                    }
+
                     holder.upperRecipe.setOnClickListener {
                         listener?.onRecyclerItemClicked(bookmarks[position].key, true)
                     }
@@ -252,6 +270,7 @@ class HomeFragment : Fragment() {
         val tvRecipeName = upperRecipe.findViewById<TextView>(R.id.tv_upper_recipe_name)
         val tvAuthorName = upperRecipe.findViewById<TextView>(R.id.tv_upper_author_name)
         val ivMainPicture = upperRecipe.findViewById<ImageView>(R.id.iv_upper_recipe_main)
+        val tvRecipeDescription = upperRecipe.findViewById<TextView>(R.id.tv_upper_recipe_description)
 
         val tvWatchCount = recipeView.findViewById<TextView>(R.id.tv_watch_count)
         val bStar = recipeView.findViewById<ImageButton>(R.id.b_star)
