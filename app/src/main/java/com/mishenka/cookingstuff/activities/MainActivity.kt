@@ -161,14 +161,12 @@ class MainActivity : AppCompatActivity(), HomeFragment.HomeFragmentListener {
                             alreadyStarred = true
                         }
                         if (!alreadyStarred) {
-                            //TODO("Redo saving, cut url so the same files won't save multiple times")
+                            //TODO("Saving is still buggy..")
                             trySchedulingBookmarkJob(key, user.uid)
                             view.setImageDrawable(ContextCompat.getDrawable(MainApplication.applicationContext(), R.drawable.star_checked))
                         } else {
-                            //TODO("Delete bookmark")
                             val currentStarRef = currentUserRef.child(Utils.CHILD_STARRED_POSTS).child(key)
                             currentStarRef.setValue(null)
-
                             val currentRecipeRef = FirebaseDatabase.getInstance().reference.child(Utils.CHILD_RECIPE).child(key)
                             currentRecipeRef.addListenerForSingleValueEvent(object : ValueEventListener {
                                 override fun onCancelled(p0: DatabaseError) {
@@ -182,6 +180,7 @@ class MainActivity : AppCompatActivity(), HomeFragment.HomeFragmentListener {
                                     }
                                 }
                             })
+                            deleteBookmarkData(key)
                             view.setImageDrawable(ContextCompat.getDrawable(MainApplication.applicationContext(), R.drawable.star_unchecked))
                         }
                     }
@@ -200,6 +199,45 @@ class MainActivity : AppCompatActivity(), HomeFragment.HomeFragmentListener {
         intent.putExtra(Utils.BOOKMARK_DATA_KEY, key)
         intent.putExtra(Utils.BOOKMARK_UID_KEY, uid)
         startService(intent)
+    }
+
+    private fun deleteBookmarkData(key: String) {
+        GlobalScope.launch {
+            val db = CookingDatabase.getInstance(MainApplication.applicationContext())
+            val persistableBookmark = PersistableBookmark<BookmarkData>(db!!)
+            val deletedBookmark = GlobalScope.async {
+                persistableBookmark.deleteBookmark(key, BookmarkData.CREATOR)
+            }.await()
+            Log.i("NYA", "Deleted bookmark: $deletedBookmark")
+            deletedBookmark?.mainPicUri?.let { safeMainPicUri ->
+                val file = File(safeMainPicUri)
+                if (file.exists()) {
+                    file.delete()
+                }
+            }
+            deletedBookmark?.stepsList?.let { safeStepsList ->
+                for (step in safeStepsList) {
+                    step.firstPicUri?.let { safeUri ->
+                        val file = File(safeUri)
+                        if (file.exists()) {
+                            file.delete()
+                        }
+                    }
+                    step.secondPicUri?.let { safeUri ->
+                        val file = File(safeUri)
+                        if (file.exists()) {
+                            file.delete()
+                        }
+                    }
+                    step.thirdPicUri?.let { safeUri ->
+                        val file = File(safeUri)
+                        if (file.exists()) {
+                            file.delete()
+                        }
+                    }
+                }
+            }
+        }
     }
 
     private fun updateUI(user : FirebaseUser?) {

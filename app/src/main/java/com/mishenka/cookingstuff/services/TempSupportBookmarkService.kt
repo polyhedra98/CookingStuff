@@ -50,7 +50,7 @@ class TempSupportBookmarkService : IntentService(TempSupportBookmarkService::cla
                     stepsDict?.let { dict ->
                         stepsDeferred = GlobalScope.async {
                             val stepsToReturn = ArrayList<Step>()
-                            for (step in stepsDict) {
+                            for (step in dict) {
                                 val folder = File("${MainApplication.applicationContext().getDir(Utils.IMAGES_DIR, Context.MODE_PRIVATE)}")
                                 if (!folder.exists()) {
                                     folder.mkdir()
@@ -182,7 +182,7 @@ class TempSupportBookmarkService : IntentService(TempSupportBookmarkService::cla
                         } catch (e: Exception) {
                             Log.i("NYA", "Error saving main pic $safeMainPicUrl")
                             val reservedSafeUrl = safeMainPicUrl.toString().replace(Utils.RESERVED_CHARS.toRegex(), "_")
-                            Log.i("NYA", "Tried to save ${reservedSafeUrl.substring(0, reservedSafeUrl.indexOf("_alt_media_token_"))}.jpg")
+                            Log.i("NYA", "Tried to saveBookmark ${reservedSafeUrl.substring(0, reservedSafeUrl.indexOf("_alt_media_token_"))}.jpg")
                             e.printStackTrace()
                             return@async null
                         }
@@ -204,10 +204,10 @@ class TempSupportBookmarkService : IntentService(TempSupportBookmarkService::cla
             val bookmark = BookmarkData(key = key, name = nameToSave, authorUID = authorUIDtoSave, author = authorToSave,
                     description = descriptionToSave, mainPicUri = mainPicUriToSave, commentsAllowed = commentsAllowed,
                     ingredientsList = ingredientsToSave, stepsList = stepsToSave)
-            Log.i("NYA", "Bookmark to save: $bookmark")
+            Log.i("NYA", "Bookmark to saveBookmark: $bookmark")
             val db = CookingDatabase.getInstance(MainApplication.applicationContext())
-            val bookmarkParcelable = PersistableBookmark<BookmarkData>(db!!)
-            bookmarkParcelable.save(key, bookmark)
+            val persistableBookmark = PersistableBookmark<BookmarkData>(db!!)
+            persistableBookmark.saveBookmark(key, bookmark)
         }
 
     }

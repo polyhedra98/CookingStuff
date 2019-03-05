@@ -2,12 +2,14 @@ package com.mishenka.cookingstuff.utils.database
 
 import android.os.Parcel
 import android.os.Parcelable
+import android.provider.Settings
 import android.support.annotation.WorkerThread
+import com.mishenka.cookingstuff.data.BookmarkData
 
 class PersistableBookmark<T: Parcelable>(private val mDb: CookingDatabase) {
 
     @WorkerThread
-    fun save(id: String, data: T) {
+    fun saveBookmark(id: String, data: T) {
         val bookmarkData = BookmarkObject(data)
         val bookmark = Bookmark(id, bookmarkData.toBytes())
         mDb.bookmarkDao().saveBookmark(bookmark)
@@ -21,6 +23,23 @@ class PersistableBookmark<T: Parcelable>(private val mDb: CookingDatabase) {
         val bookmarkToReturn = creator.createFromParcel(bookmarkObject.getParcel())
         bookmarkObject.recycle()
         return bookmarkToReturn
+    }
+
+    @WorkerThread
+    fun deleteBookmark(id: String, creator: Parcelable.Creator<T>? = null): T? {
+        var bookmarkDataToProcess: Bookmark? = null
+        creator?.let {
+            bookmarkDataToProcess = mDb.bookmarkDao().getBookmark(id)
+        }
+        mDb.bookmarkDao().deleteBookmark(id)
+        return if (bookmarkDataToProcess == null) {
+            null
+        } else {
+            val bookmarkObject = BookmarkObject(bookmarkDataToProcess!!.data)
+            val bookmarkToReturn = creator!!.createFromParcel(bookmarkObject.getParcel())
+            bookmarkObject.recycle()
+            bookmarkToReturn
+        }
     }
 
     @WorkerThread

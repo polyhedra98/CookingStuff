@@ -380,6 +380,6 @@ class DetailActivity : AppCompatActivity(), CommentListener {
     }
 
     override fun onCommentLikeButtonClicked(v: View) {
-        //TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        //TODO("Implement likes logic")
     }
 }
