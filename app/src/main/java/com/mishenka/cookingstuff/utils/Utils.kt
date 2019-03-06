@@ -37,6 +37,7 @@ object Utils {
     const val CHILD_RECIPE = "recipes"
     const val CHILD_WHOLE_RECIPE = "whole_recipes"
     const val CHILD_USER = "users"
+    const val CHILD_USER_CREATED_POSTS = "createdPosts"
     const val CHILD_STARRED_POSTS = "starredPosts"
     const val CHILD_USER_LIKED_COMMENTS = "likedComments"
     const val CHILD_COOKING_PHOTOS = "cooking_pictures"

@@ -156,7 +156,7 @@ class TempSupportUploadService : IntentService(TempSupportUploadService::class.s
                     commentsAllowed = mCommentsAllowed, mainPicUrl = mainPicDownloadUrl))
             dbRef.child(Utils.CHILD_WHOLE_RECIPE).child(key).setValue(WholeRecipe(key = key,
                     ingredientsList = ingredientsList, stepsList = safeFirebaseStepsList))
-
+            dbRef.child(Utils.CHILD_USER).child(mAuthorUID).child(Utils.CHILD_USER_CREATED_POSTS).child(key).setValue(true)
         }
     }
 }

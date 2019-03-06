@@ -10,10 +10,12 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.ImageView
 import android.widget.TextView
+import com.bumptech.glide.Glide
+import com.bumptech.glide.request.RequestOptions
 import com.firebase.ui.auth.AuthUI
 import com.firebase.ui.auth.IdpResponse
-import com.firebase.ui.auth.data.model.User
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.database.DataSnapshot
@@ -24,6 +26,10 @@ import com.google.firebase.database.ValueEventListener
 import com.mishenka.cookingstuff.R
 import com.mishenka.cookingstuff.activities.MainActivity
 import com.mishenka.cookingstuff.utils.Utils
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 
 private const val ARG_PARAM1 = "param1"
 private const val ARG_PARAM2 = "param2"
@@ -82,14 +88,28 @@ class MeFragment : Fragment(), MainActivity.MainActivityListener {
     }
 
     private fun updateUI(firebaseUser: FirebaseUser?) {
-        val greetingTextView = view?.findViewById<TextView>(R.id.me_text_view)
-        val signInButton = view?.findViewById<Button>(R.id.me_sign_in_button)
+        val signInButton = view?.findViewById<Button>(R.id.b_me_sign_in)
+        val outerGroup = view?.findViewById<ViewGroup>(R.id.me_outer_relative_layout)
         if (firebaseUser != null) {
-            signInButton?.visibility = View.INVISIBLE
+            signInButton?.visibility = View.GONE
+            val greetingTextView = view?.findViewById<TextView>(R.id.tv_me_name)
             greetingTextView?.text = "Greetings, ${firebaseUser.displayName}"
-            greetingTextView?.visibility = View.VISIBLE
+            val ivAvatar = view?.findViewById<ImageView>(R.id.iv_me_avatar)
+            if (ivAvatar != null && firebaseUser.photoUrl != null) {
+                GlobalScope.launch(Dispatchers.Main) {
+                    val drawable = GlobalScope.async {
+                        Glide.with(this@MeFragment)
+                                .load(firebaseUser.photoUrl)
+                                .apply(RequestOptions().centerCrop())
+                                .submit()
+                                .get()
+                    }.await()
+                    ivAvatar.setImageDrawable(drawable)
+                }
+            }
+            outerGroup?.visibility = View.VISIBLE
         } else {
-            greetingTextView?.visibility = View.INVISIBLE
+            outerGroup?.visibility = View.GONE
             signInButton?.setOnClickListener {
                 val providers = arrayListOf(
                         AuthUI.IdpConfig.EmailBuilder().build(),
