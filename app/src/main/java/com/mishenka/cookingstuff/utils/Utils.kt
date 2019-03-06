@@ -38,6 +38,7 @@ object Utils {
     const val CHILD_WHOLE_RECIPE = "whole_recipes"
     const val CHILD_USER = "users"
     const val CHILD_STARRED_POSTS = "starredPosts"
+    const val CHILD_USER_LIKED_COMMENTS = "likedComments"
     const val CHILD_COOKING_PHOTOS = "cooking_pictures"
     const val CHILD_RECIPE_NAME = "name"
     const val CHILD_RECIPE_AUTHOR = "author"
@@ -58,4 +59,5 @@ object Utils {
     const val COMMENT_SNAPSHOT_AUTHOR = "user"
     const val COMMENT_SNAPSHOT_AVATAR_URL = "userAvatarUrl"
     const val COMMENT_SNAPSHOT_LIKE_COUNT = "likeCount"
+    const val COMMENT_SNAPSHOT_KEY = "key"
 }

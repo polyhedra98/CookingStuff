@@ -3,6 +3,7 @@ package com.mishenka.cookingstuff.activities
 import android.graphics.Typeface
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
+import android.support.v4.content.ContextCompat
 import android.support.v4.content.res.ResourcesCompat
 import android.text.Spannable
 import android.text.SpannableStringBuilder
@@ -11,10 +12,7 @@ import android.text.style.StyleSpan
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
-import android.widget.EditText
-import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.TextView
+import android.widget.*
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.google.firebase.auth.FirebaseAuth
@@ -30,10 +28,7 @@ import com.mishenka.cookingstuff.views.CommentView
 import com.mishenka.cookingstuff.views.NonInteractiveCommentView
 import com.mishenka.cookingstuff.views.NonInteractiveIngredientView
 import com.mishenka.cookingstuff.views.NonInteractiveStepView
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.async
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import java.lang.Exception
 
 class DetailActivity : AppCompatActivity(), CommentListener {
@@ -179,7 +174,6 @@ class DetailActivity : AppCompatActivity(), CommentListener {
     }
 
     private fun updateUIComments(commentsAllowed: Boolean?) {
-        //TODO("Finish working on comments already!")
         if (commentsAllowed != null && commentsAllowed) {
             val vgOuterComments = findViewById<ViewGroup>(R.id.detail_outer_comments)
             vgOuterComments.visibility = View.VISIBLE
@@ -192,30 +186,65 @@ class DetailActivity : AppCompatActivity(), CommentListener {
             mComment = Comment(userAvatarUrl = user?.photoUrl?.toString())
             vgComments.addView(CommentView(mComment!!, this@DetailActivity), params)
 
-            val localCommentsRef = FirebaseDatabase.getInstance().reference.child(Utils.CHILD_WHOLE_RECIPE).child(mRecipeKey!!).child(Utils.WHOLE_RECIPE_COMMENTS)
-            localCommentsRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            var deferredLikedComments: Deferred<ArrayList<String>?>? = null
+            user?.uid?.let { safeUID ->
+                val localUserCommentsRef = FirebaseDatabase.getInstance().reference.child(Utils.CHILD_USER).child(safeUID).child(Utils.CHILD_USER_LIKED_COMMENTS)
+                localUserCommentsRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                    override fun onCancelled(p0: DatabaseError) {
+                        throw p0.toException()
+                    }
+
+                    override fun onDataChange(p0: DataSnapshot) {
+                        if (p0.hasChildren()) {
+                            deferredLikedComments = GlobalScope.async {
+                                val deferredLikedCommentsList = ArrayList<String>()
+                                p0.children.forEach { snapshotChild ->
+                                    snapshotChild.key?.let { safeSnapshotKey ->
+                                        Log.i("NYA", "forEach snapshot key: $safeSnapshotKey")
+                                        deferredLikedCommentsList.add(safeSnapshotKey)
+                                    }
+                                }
+                                deferredLikedCommentsList
+                            }
+                        }
+                    }
+                })
+            }
+
+            val localRecipeCommentsRef = FirebaseDatabase.getInstance().reference.child(Utils.CHILD_WHOLE_RECIPE).child(mRecipeKey!!).child(Utils.WHOLE_RECIPE_COMMENTS)
+            localRecipeCommentsRef.addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onCancelled(p0: DatabaseError) {
                     throw p0.toException()
                 }
 
                 override fun onDataChange(p0: DataSnapshot) {
                     if (p0.hasChildren()) {
-                        val iterator = p0.children.iterator()
-                        while (iterator.hasNext()) {
-                            val snapshot = iterator.next()
-                            val innerSnapshot = snapshot.children
-                            val innerIterator = innerSnapshot.iterator()
-                            val commentToShow = Comment()
-                            while (innerIterator.hasNext()) {
-                                val commentSnapshot = innerIterator.next()
-                                when (commentSnapshot.key) {
-                                    Utils.COMMENT_SNAPSHOT_TEXT -> commentToShow.text = commentSnapshot.value?.toString()
-                                    Utils.COMMENT_SNAPSHOT_AUTHOR -> commentToShow.user = commentSnapshot.value?.toString()
-                                    Utils.COMMENT_SNAPSHOT_AVATAR_URL -> commentToShow.userAvatarUrl = commentSnapshot.value?.toString()
-                                    Utils.COMMENT_SNAPSHOT_LIKE_COUNT -> commentToShow.likeCount = commentSnapshot.value as Long?
+                        GlobalScope.launch(Dispatchers.Main) {
+                            val iterator = p0.children.iterator()
+                            val likedComments = deferredLikedComments?.await()
+                            Log.i("NYA", "Liked comments: $likedComments")
+                            while (iterator.hasNext()) {
+                                val snapshot = iterator.next()
+                                val innerSnapshot = snapshot.children
+                                val innerIterator = innerSnapshot.iterator()
+                                val commentToShow = Comment()
+                                var liked: Boolean? = false
+                                while (innerIterator.hasNext()) {
+                                    val commentSnapshot = innerIterator.next()
+                                    when (commentSnapshot.key) {
+                                        Utils.COMMENT_SNAPSHOT_KEY -> {
+                                            commentToShow.key = commentSnapshot.value?.toString()
+                                            Log.i("NYA", "${commentSnapshot.value?.toString()} containment in liked array: ${likedComments?.contains(commentSnapshot.value?.toString())}")
+                                            liked = likedComments?.contains(commentSnapshot.value?.toString())
+                                        }
+                                        Utils.COMMENT_SNAPSHOT_TEXT -> commentToShow.text = commentSnapshot.value?.toString()
+                                        Utils.COMMENT_SNAPSHOT_AUTHOR -> commentToShow.user = commentSnapshot.value?.toString()
+                                        Utils.COMMENT_SNAPSHOT_AVATAR_URL -> commentToShow.userAvatarUrl = commentSnapshot.value?.toString()
+                                        Utils.COMMENT_SNAPSHOT_LIKE_COUNT -> commentToShow.likeCount = commentSnapshot.value as Long?
+                                    }
                                 }
+                                vgComments.addView(NonInteractiveCommentView(commentToShow, liked, this@DetailActivity), 1, params)
                             }
-                            vgComments.addView(NonInteractiveCommentView(commentToShow, this@DetailActivity), 1, params)
                         }
                     }
                 }
@@ -347,7 +376,11 @@ class DetailActivity : AppCompatActivity(), CommentListener {
             mComment?.likeCount = 0.toLong()
 
             val currentRecipeRef = FirebaseDatabase.getInstance().reference.child(Utils.CHILD_WHOLE_RECIPE).child(mRecipeKey!!)
-            currentRecipeRef.child(Utils.WHOLE_RECIPE_COMMENTS).push().setValue(mComment)
+            val key = currentRecipeRef.child(Utils.WHOLE_RECIPE_COMMENTS).push().key
+            key?.let { safeKey ->
+                mComment?.key = key
+                currentRecipeRef.child(Utils.WHOLE_RECIPE_COMMENTS).child(safeKey).setValue(mComment)
+            }
 
             val etCommentText = (v as CommentView).findViewById<EditText>(R.id.comment_text)
             val savedText = etCommentText.text.toString()
@@ -360,11 +393,68 @@ class DetailActivity : AppCompatActivity(), CommentListener {
                     LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
             )
-            vgComments.addView(NonInteractiveCommentView(mComment!!, this@DetailActivity), 1, params)
+            vgComments.addView(NonInteractiveCommentView(mComment!!, false, this@DetailActivity), 1, params)
         }
     }
 
-    override fun onCommentLikeButtonClicked(v: View) {
-        //TODO("Implement likes logic")
+    override fun onCommentLikeButtonClicked(v: View, key: String) {
+        FirebaseAuth.getInstance().currentUser?.let { safeUser ->
+            val bLike = v.findViewById<ImageButton>(R.id.non_comment_like)
+            val tvCount = v.findViewById<TextView>(R.id.non_comment_like_count)
+            var alreadyLiked = false
+            val currentUserRef = FirebaseDatabase.getInstance().reference.child(Utils.CHILD_USER).child(safeUser.uid)
+            currentUserRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onCancelled(p0: DatabaseError) {
+                    throw p0.toException()
+                }
+
+                override fun onDataChange(p0: DataSnapshot) {
+                    val currentComment = p0.child(Utils.CHILD_USER_LIKED_COMMENTS).child(key).value as Boolean?
+                    if (currentComment != null && currentComment) {
+                        alreadyLiked = true
+                    }
+                    mRecipeKey?.let { safeRecipeKey ->
+                        if (alreadyLiked) {
+                            val currentUserCommentRef = currentUserRef.child(Utils.CHILD_USER_LIKED_COMMENTS).child(key)
+                            currentUserCommentRef.setValue(null)
+                            val currentRecipeCommentRef = FirebaseDatabase.getInstance().reference.child(Utils.CHILD_WHOLE_RECIPE).child(safeRecipeKey).child(Utils.WHOLE_RECIPE_COMMENTS).child(key)
+                            currentRecipeCommentRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                                override fun onCancelled(p0: DatabaseError) {
+                                    throw p0.toException()
+                                }
+
+                                override fun onDataChange(p0: DataSnapshot) {
+                                    val currentLikesCount = p0.child(Utils.COMMENT_SNAPSHOT_LIKE_COUNT).value as Long?
+                                    currentLikesCount?.let { safeLikeCount ->
+                                        currentRecipeCommentRef.child(Utils.COMMENT_SNAPSHOT_LIKE_COUNT).setValue(safeLikeCount - 1)
+                                    }
+                                }
+                            })
+                            bLike.setImageDrawable(ContextCompat.getDrawable(this@DetailActivity, R.drawable.like_unchecked))
+                            tvCount.text = (tvCount.text.toString().toLong() - 1).toString()
+                        } else {
+                            val currentUserCommentRef = currentUserRef.child(Utils.CHILD_USER_LIKED_COMMENTS).child(key)
+                            currentUserCommentRef.setValue(true)
+                            val currentRecipeCommentRef = FirebaseDatabase.getInstance().reference.child(Utils.CHILD_WHOLE_RECIPE).child(safeRecipeKey).child(Utils.WHOLE_RECIPE_COMMENTS).child(key)
+                            currentRecipeCommentRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                                override fun onCancelled(p0: DatabaseError) {
+                                    throw p0.toException()
+                                }
+
+                                override fun onDataChange(p0: DataSnapshot) {
+                                    val currentLikesCount = p0.child(Utils.COMMENT_SNAPSHOT_LIKE_COUNT).value as Long?
+                                    currentLikesCount?.let { safeLikeCount ->
+                                        currentRecipeCommentRef.child(Utils.COMMENT_SNAPSHOT_LIKE_COUNT).setValue(safeLikeCount + 1)
+                                    }
+                                }
+                            })
+                            bLike.setImageDrawable(ContextCompat.getDrawable(this@DetailActivity, R.drawable.like_checked))
+                            tvCount.text = (tvCount.text.toString().toLong() + 1).toString()
+                        }
+                    }
+                }
+            })
+
+        }
     }
 }

@@ -143,7 +143,7 @@ class MainActivity : AppCompatActivity(), HomeFragment.HomeFragmentListener {
                         if (!alreadyStarred) {
                             //TODO("Saving is still buggy..")
                             trySchedulingBookmarkJob(key, user.uid)
-                            view.setImageDrawable(ContextCompat.getDrawable(MainApplication.applicationContext(), R.drawable.star_checked))
+                            view.setImageDrawable(ContextCompat.getDrawable(this@MainActivity, R.drawable.star_checked))
                         } else {
                             val currentStarRef = currentUserRef.child(Utils.CHILD_STARRED_POSTS).child(key)
                             currentStarRef.setValue(null)
@@ -161,7 +161,7 @@ class MainActivity : AppCompatActivity(), HomeFragment.HomeFragmentListener {
                                 }
                             })
                             deleteBookmarkData(key)
-                            view.setImageDrawable(ContextCompat.getDrawable(MainApplication.applicationContext(), R.drawable.star_unchecked))
+                            view.setImageDrawable(ContextCompat.getDrawable(this@MainActivity, R.drawable.star_unchecked))
                         }
                     }
                 })

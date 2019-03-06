@@ -1,7 +1,9 @@
 package com.mishenka.cookingstuff.views
 
 import android.content.Context
+import android.support.v4.content.ContextCompat
 import android.util.AttributeSet
+import android.util.Log
 import android.view.LayoutInflater
 import android.widget.ImageButton
 import android.widget.ImageView
@@ -16,22 +18,26 @@ import com.mishenka.cookingstuff.interfaces.CommentListener
 class NonInteractiveCommentView : RelativeLayout {
     private val mCommentListener: CommentListener?
     private val mComment: Comment?
+    private val mLiked: Boolean?
 
-    constructor(comment: Comment, context: Context?) : super(context) {
+    constructor(comment: Comment?, liked: Boolean?, context: Context?) : super(context) {
         mCommentListener = if (context is CommentListener) context else null
         mComment = comment
+        mLiked = liked
     }
 
-    constructor(comment: Comment, context: Context?, attrs: AttributeSet?) :
+    constructor(comment: Comment?, liked: Boolean?, context: Context?, attrs: AttributeSet?) :
             super(context, attrs) {
         mCommentListener = if (context is CommentListener) context else null
         mComment = comment
+        mLiked = liked
     }
 
-    constructor(comment: Comment, context: Context?, attrs: AttributeSet?, defStyleAttr: Int) :
+    constructor(comment: Comment?, liked: Boolean?, context: Context?, attrs: AttributeSet?, defStyleAttr: Int) :
             super(context, attrs, defStyleAttr) {
         mCommentListener = if (context is CommentListener) context else null
         mComment = comment
+        mLiked = liked
     }
 
     init {
@@ -61,8 +67,13 @@ class NonInteractiveCommentView : RelativeLayout {
         }
 
         val bLike = findViewById<ImageButton>(R.id.non_comment_like)
+        if (mLiked != null && mLiked) {
+            bLike.setImageDrawable(ContextCompat.getDrawable(context, R.drawable.like_checked))
+        }
         bLike.setOnClickListener {
-            mCommentListener?.onCommentLikeButtonClicked(this)
+            mComment?.key?.let { safeKey ->
+                mCommentListener?.onCommentLikeButtonClicked(this, safeKey)
+            }
         }
 
         val tvLikeCount = findViewById<TextView>(R.id.non_comment_like_count)
