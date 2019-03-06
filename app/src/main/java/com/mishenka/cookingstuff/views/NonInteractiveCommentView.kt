@@ -41,6 +41,12 @@ class NonInteractiveCommentView : RelativeLayout {
     override fun onAttachedToWindow() {
         super.onAttachedToWindow()
 
+        val tvCommentAuthor = findViewById<TextView>(R.id.non_comment_author)
+        mComment?.user?.let { safeUser ->
+            tvCommentAuthor.text = safeUser
+        }
+
+        //TODO("Potentially add 'read more..'")
         val tvCommentText = findViewById<TextView>(R.id.non_comment_text)
         mComment?.text?.let { commentText->
             tvCommentText.text = commentText

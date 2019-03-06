@@ -1,21 +1,14 @@
 package com.mishenka.cookingstuff.activities
 
-import android.content.Context
 import android.content.Intent
-import android.graphics.Bitmap
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
-import android.os.Environment
 import android.support.v4.content.ContextCompat
 import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.widget.Button
 import android.widget.ImageButton
-import com.beust.klaxon.Klaxon
-import com.bumptech.glide.Glide
-import com.bumptech.glide.load.engine.DiskCacheStrategy
-import com.bumptech.glide.request.RequestOptions
 import com.firebase.ui.auth.AuthUI
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -25,21 +18,17 @@ import com.google.firebase.database.FirebaseDatabase
 import com.google.firebase.database.ValueEventListener
 import com.mishenka.cookingstuff.R
 import com.mishenka.cookingstuff.data.*
-import com.mishenka.cookingstuff.fragments.ChatFragment
 import com.mishenka.cookingstuff.fragments.HomeFragment
 import com.mishenka.cookingstuff.fragments.MeFragment
 import com.mishenka.cookingstuff.services.TempSupportBookmarkService
 import com.mishenka.cookingstuff.utils.MainApplication
 import com.mishenka.cookingstuff.utils.Utils
-import com.mishenka.cookingstuff.utils.database.Bookmark
 import com.mishenka.cookingstuff.utils.database.CookingDatabase
 import com.mishenka.cookingstuff.utils.database.PersistableBookmark
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.launch
 import java.io.File
-import java.io.FileOutputStream
 
 class MainActivity : AppCompatActivity(), HomeFragment.HomeFragmentListener {
     private lateinit var mAuth : FirebaseAuth
@@ -47,7 +36,6 @@ class MainActivity : AppCompatActivity(), HomeFragment.HomeFragmentListener {
 
     private val HOME_TAG = "HOME_TAG"
     private val BOOKMARK_TAG = "BOOKMARK_TAG"
-    private val CHAT_TAG = "CHAT_TAG"
     private val ME_TAG = "ME_TAG"
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -84,13 +72,6 @@ class MainActivity : AppCompatActivity(), HomeFragment.HomeFragmentListener {
                 if (currentHomeFragment == null) {
                     supportFragmentManager.beginTransaction().replace(R.id.fragment_container, HomeFragment.newInstance(Utils.HOME_FRAGMENT_OPTION), HOME_TAG).commit()
                 }
-            }
-        }
-
-        findViewById<Button>(R.id.tab_button_chat).setOnClickListener {
-            val currentChatFragment = supportFragmentManager.findFragmentByTag(CHAT_TAG)
-            if (currentChatFragment == null) {
-                supportFragmentManager.beginTransaction().replace(R.id.fragment_container, ChatFragment.newInstance(), CHAT_TAG).commit()
             }
         }
 
@@ -144,7 +125,6 @@ class MainActivity : AppCompatActivity(), HomeFragment.HomeFragmentListener {
     }
 
     //TODO("Finish bookmarks saving and deleting")
-    //TODO("Skips frames while saving, even though coroutine starts immediately")
     override fun onStarButtonClicked(recipeKey: String?, view : ImageButton) {
         recipeKey?.let { key ->
             mAuth.currentUser?.let { user ->

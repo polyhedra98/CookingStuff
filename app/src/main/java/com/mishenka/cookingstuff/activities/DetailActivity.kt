@@ -17,6 +17,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
+import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.*
 import com.mishenka.cookingstuff.R
 import com.mishenka.cookingstuff.data.*
@@ -179,7 +180,6 @@ class DetailActivity : AppCompatActivity(), CommentListener {
 
     private fun updateUIComments(commentsAllowed: Boolean?) {
         //TODO("Finish working on comments already!")
-        /*
         if (commentsAllowed != null && commentsAllowed) {
             val vgOuterComments = findViewById<ViewGroup>(R.id.detail_outer_comments)
             vgOuterComments.visibility = View.VISIBLE
@@ -189,61 +189,41 @@ class DetailActivity : AppCompatActivity(), CommentListener {
                     LinearLayout.LayoutParams.WRAP_CONTENT
             )
             val user = FirebaseAuth.getInstance().currentUser
-            mComment = Comment(user?.photoUrl?.toString())
+            mComment = Comment(userAvatarUrl = user?.photoUrl?.toString())
             vgComments.addView(CommentView(mComment!!, this@DetailActivity), params)
 
-            val localWholeRecipeRef = FirebaseDatabase.getInstance().reference.child(Utils.CHILD_WHOLE_RECIPE).child(mRecipeKey!!)
-            localWholeRecipeRef.addListenerForSingleValueEvent(object : ValueEventListener {
+            val localCommentsRef = FirebaseDatabase.getInstance().reference.child(Utils.CHILD_WHOLE_RECIPE).child(mRecipeKey!!).child(Utils.WHOLE_RECIPE_COMMENTS)
+            localCommentsRef.addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onCancelled(p0: DatabaseError) {
                     throw p0.toException()
                 }
 
                 override fun onDataChange(p0: DataSnapshot) {
-                    //TODO("Fix")
-                    //TODO("One way to fix:")
-                    /*if (p0.hasChildren()) {
-                    val iterator = p0.children.iterator()
-                    while (iterator.hasNext()) {
-                        val snapshot = iterator.next()
-                        snapshot.key?.let { safeKey ->
-                            starredPostsKeys.add(safeKey)
-                        }
-                    }
-                }*/
-
-//Comments list: {-LZ_MYlKH4KtTsMnd5kp={userAvatarUrl=https://lh3.googleusercontent.com/-yhtBJ8DjfeE/AAAAAAAAAAI/AAAAAAAAABg/rTbHxuiwDsw/s96-c/photo.jpg, text=first.}, -LZ_Peh5aO9c1hVzCufP={userAvatarUrl=https://lh3.googleusercontent.com/-yhtBJ8DjfeE/AAAAAAAAAAI/AAAAAAAAABg/rTbHxuiwDsw/s96-c/photo.jpg, text=Cookiezi, come back pls UwU..}}
-//Ingredient list: [{text=I1, separator=false}, {text=I3, separator=false}, {text=S1, separator=true}]
-//Even never comments: [{userAvatarUrl=https://lh3.googleusercontent.com/-yhtBJ8DjfeE/AAAAAAAAAAI/AAAAAAAAABg/rTbHxuiwDsw/s96-c/photo.jpg, text=first.}, {userAvatarUrl=https://lh3.googleusercontent.com/-yhtBJ8DjfeE/AAAAAAAAAAI/AAAAAAAAABg/rTbHxuiwDsw/s96-c/photo.jpg, text=Cookiezi, come back pls UwU..}]
-                    /*val commentsChildrenList = p0.child(Utils.WHOLE_RECIPE_COMMENTS).children
-                var commentsListBraceless = String()
-                for (child in commentsChildrenList) {
-                    commentsListBraceless += "${child.value}, "
-                }
-                if (!commentsListBraceless.isEmpty()) {
-                    try {
-                        val commentsList = "[${commentsListBraceless.substring(0, commentsListBraceless.length - 2)}]"
-                        val mapper = Klaxon()
-                        val commentsDict = mapper.parseArray<Comment?>(commentsList)
-                        commentsDict?.let { dict ->
-                            for (nullableComment in dict.reversed()) {
-                                nullableComment?.let { comment ->
-                                    vgComments.addView(NonInteractiveCommentView(comment, this@DetailActivity), params)
+                    if (p0.hasChildren()) {
+                        val iterator = p0.children.iterator()
+                        while (iterator.hasNext()) {
+                            val snapshot = iterator.next()
+                            val innerSnapshot = snapshot.children
+                            val innerIterator = innerSnapshot.iterator()
+                            val commentToShow = Comment()
+                            while (innerIterator.hasNext()) {
+                                val commentSnapshot = innerIterator.next()
+                                when (commentSnapshot.key) {
+                                    Utils.COMMENT_SNAPSHOT_TEXT -> commentToShow.text = commentSnapshot.value?.toString()
+                                    Utils.COMMENT_SNAPSHOT_AUTHOR -> commentToShow.user = commentSnapshot.value?.toString()
+                                    Utils.COMMENT_SNAPSHOT_AVATAR_URL -> commentToShow.userAvatarUrl = commentSnapshot.value?.toString()
+                                    Utils.COMMENT_SNAPSHOT_LIKE_COUNT -> commentToShow.likeCount = commentSnapshot.value as Long?
                                 }
                             }
+                            vgComments.addView(NonInteractiveCommentView(commentToShow, this@DetailActivity), 1, params)
                         }
-                    } catch (e: Exception) {
-                        val vgOuterComments = findViewById<ViewGroup>(R.id.detail_outer_comments)
-                        vgOuterComments.visibility = View.GONE
-                        throw e
                     }
-                }*/
                 }
             })
         } else {
             val vgOuterComments = findViewById<ViewGroup>(R.id.detail_outer_comments)
             vgOuterComments.visibility = View.GONE
         }
-        */
     }
 
     private fun updateUIMainPic(uri: String?) {
@@ -363,12 +343,17 @@ class DetailActivity : AppCompatActivity(), CommentListener {
 
     override fun onCommentSubmitButtonClicked(v: View) {
         mComment?.text?.let {
+            mComment?.user = FirebaseAuth.getInstance().currentUser?.displayName
+            mComment?.likeCount = 0.toLong()
+
             val currentRecipeRef = FirebaseDatabase.getInstance().reference.child(Utils.CHILD_WHOLE_RECIPE).child(mRecipeKey!!)
             currentRecipeRef.child(Utils.WHOLE_RECIPE_COMMENTS).push().setValue(mComment)
 
             val etCommentText = (v as CommentView).findViewById<EditText>(R.id.comment_text)
+            val savedText = etCommentText.text.toString()
             etCommentText.text = null
             etCommentText.clearFocus()
+            mComment?.text = savedText
 
             val vgComments = findViewById<ViewGroup>(R.id.detail_comments)
             val params = LinearLayout.LayoutParams(

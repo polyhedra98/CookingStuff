@@ -54,4 +54,8 @@ object Utils {
     const val STEP_SNAPSHOT_PIC_URLS = "picUrls"
     const val INGREDIENT_SNAPSHOT_TEXT = "text"
     const val INGREDIENT_SNAPSHOT_SEPARATOR = "separator"
+    const val COMMENT_SNAPSHOT_TEXT = "text"
+    const val COMMENT_SNAPSHOT_AUTHOR = "user"
+    const val COMMENT_SNAPSHOT_AVATAR_URL = "userAvatarUrl"
+    const val COMMENT_SNAPSHOT_LIKE_COUNT = "likeCount"
 }
