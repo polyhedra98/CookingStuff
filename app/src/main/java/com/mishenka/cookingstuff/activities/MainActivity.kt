@@ -38,6 +38,8 @@ class MainActivity : AppCompatActivity(), HomeFragment.HomeFragmentListener {
     private val BOOKMARK_TAG = "BOOKMARK_TAG"
     private val ME_TAG = "ME_TAG"
 
+    //TODO("Fix recycler sloppiness")
+    //TODO("Load and render every image async")
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)

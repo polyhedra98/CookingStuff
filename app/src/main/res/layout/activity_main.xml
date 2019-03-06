@@ -59,14 +59,6 @@
                 android:text="Add recipe" />
 
             <Button
-                android:id="@+id/tab_button_chat"
-                style="?android:attr/buttonBarButtonStyle"
-                android:layout_width="wrap_content"
-                android:layout_height="match_parent"
-                android:layout_weight="1"
-                android:text="Chat" />
-
-            <Button
                 android:id="@+id/tab_button_me"
                 style="?android:attr/buttonBarButtonStyle"
                 android:layout_width="wrap_content"

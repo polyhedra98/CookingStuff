@@ -8,6 +8,7 @@ data class Recipe (
     var authorUID: String? = null,
     var description: String? = null,
     var commentsAllowed: Boolean? = null,
-    var readCount: Int = 0,
-    var mainPicUrl: String? = null
+    var mainPicUrl: String? = null,
+    var readCount: Long? = 0,
+    var starCount: Long? = 0
 )

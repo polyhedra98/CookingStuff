@@ -41,6 +41,7 @@ object Utils {
     const val CHILD_STARRED_POSTS = "starredPosts"
     const val CHILD_USER_LIKED_COMMENTS = "likedComments"
     const val CHILD_COOKING_PHOTOS = "cooking_pictures"
+    const val CHILD_RECIPE_KEY = "key"
     const val CHILD_RECIPE_NAME = "name"
     const val CHILD_RECIPE_AUTHOR = "author"
     const val CHILD_RECIPE_AUTHOR_UID = "authorUID"

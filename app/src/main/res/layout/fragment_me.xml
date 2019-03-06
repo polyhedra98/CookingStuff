@@ -7,106 +7,121 @@
     android:layout_height="match_parent"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".fragments.MeFragment">
-    <RelativeLayout
-        android:id="@+id/me_outer_relative_layout"
-        android:background="@android:drawable/dialog_holo_light_frame"
+
+    <LinearLayout
+        android:id="@+id/me_outer_linear_layout"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_margin="4dp"
-        android:paddingTop="8dp"
-        android:paddingLeft="8dp"
-        android:paddingStart="8dp"
-        android:paddingRight="8dp"
-        android:paddingEnd="8dp"
-        android:paddingBottom="16dp"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
         android:visibility="gone">
 
-        <TextView
-            android:id="@+id/me_personal_space"
+        <RelativeLayout
+            android:id="@+id/me_outer_relative_layout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true"
-            android:layout_marginLeft="8dp"
-            android:layout_marginStart="8dp"
-            android:layout_marginRight="8dp"
-            android:layout_marginEnd="8dp"
-            android:layout_marginBottom="8dp"
-            android:textSize="24sp"
-            android:textStyle="bold"
-            android:shadowColor="#000000"
-            android:shadowRadius="0.5"
-            android:textColor="@color/colorPrimary"
-            android:textAlignment="center"
-            android:text="Personal space"
-            />
+            android:layout_margin="4dp"
+            android:background="@android:drawable/dialog_holo_light_frame"
+            android:paddingStart="8dp"
+            android:paddingLeft="8dp"
+            android:paddingTop="8dp"
+            android:paddingEnd="8dp"
+            android:paddingRight="8dp"
+            android:paddingBottom="16dp">
 
-        <android.support.v7.widget.CardView
-            android:id="@+id/me_avatar_card"
-            android:layout_width="78dp"
-            android:layout_height="78dp"
-            app:cardCornerRadius="39dp"
-            android:layout_marginLeft="8dp"
-            android:layout_marginStart="8dp"
-            android:elevation="12dp"
-            android:layout_below="@+id/me_personal_space"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true">
-            <ImageView
-                android:id="@+id/iv_me_avatar"
+            <TextView
+                android:id="@+id/me_personal_space"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                app:srcCompat="@color/browser_actions_title_color" />
-        </android.support.v7.widget.CardView>
+                android:layout_height="wrap_content"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentLeft="true"
+                android:layout_marginStart="8dp"
+                android:layout_marginLeft="8dp"
+                android:layout_marginEnd="8dp"
+                android:layout_marginRight="8dp"
+                android:layout_marginBottom="8dp"
+                android:shadowColor="#000000"
+                android:shadowRadius="0.5"
+                android:text="Personal space"
+                android:textAlignment="center"
+                android:textColor="@color/colorPrimary"
+                android:textSize="24sp"
+                android:textStyle="bold" />
 
-        <TextView
-            android:id="@+id/tv_me_name"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_below="@+id/me_personal_space"
-            android:layout_marginStart="16dp"
-            android:layout_marginLeft="16dp"
-            android:layout_toEndOf="@+id/me_avatar_card"
-            android:layout_toRightOf="@+id/me_avatar_card"
-            android:text="Greetings!"
-            android:textSize="16sp" />
+            <android.support.v7.widget.CardView
+                android:id="@+id/me_avatar_card"
+                android:layout_width="78dp"
+                android:layout_height="78dp"
+                android:layout_below="@+id/me_personal_space"
+                android:layout_alignParentStart="true"
+                android:layout_alignParentLeft="true"
+                android:layout_marginStart="8dp"
+                android:layout_marginLeft="8dp"
+                android:elevation="12dp"
+                app:cardCornerRadius="39dp">
 
-        <TextView
-            android:id="@+id/tv_me_total_stars"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignLeft="@+id/tv_me_name"
-            android:layout_alignStart="@+id/tv_me_name"
-            android:layout_below="@+id/tv_me_name"
-            android:layout_marginTop="8dp"
-            android:text="Total stars"
-            android:textSize="16sp"
-            />
+                <ImageView
+                    android:id="@+id/iv_me_avatar"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    app:srcCompat="@color/browser_actions_title_color" />
+            </android.support.v7.widget.CardView>
 
-        <TextView
-            android:id="@+id/tv_me_total_views"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignLeft="@+id/tv_me_name"
-            android:layout_alignStart="@+id/tv_me_name"
-            android:layout_below="@+id/tv_me_total_stars"
-            android:layout_marginTop="8dp"
-            android:text="Total views"
-            android:textSize="16sp"
-            />
+            <TextView
+                android:id="@+id/tv_me_name"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/me_personal_space"
+                android:layout_marginStart="16dp"
+                android:layout_marginLeft="16dp"
+                android:layout_toEndOf="@+id/me_avatar_card"
+                android:layout_toRightOf="@+id/me_avatar_card"
+                android:text="Greetings!"
+                android:textSize="16sp" />
 
-        <TextView
-            android:id="@+id/tv_me_total_posts"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_alignLeft="@+id/tv_me_name"
-            android:layout_alignStart="@+id/tv_me_name"
-            android:layout_below="@+id/tv_me_total_views"
-            android:layout_marginTop="8dp"
-            android:text="Total posts"
-            android:textSize="16sp"
-            />
-    </RelativeLayout>
+            <TextView
+                android:id="@+id/tv_me_total_stars"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/tv_me_name"
+                android:layout_alignStart="@+id/tv_me_name"
+                android:layout_alignLeft="@+id/tv_me_name"
+                android:layout_marginTop="8dp"
+                android:text="Total stars"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/tv_me_total_views"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/tv_me_total_stars"
+                android:layout_alignStart="@+id/tv_me_name"
+                android:layout_alignLeft="@+id/tv_me_name"
+                android:layout_marginTop="8dp"
+                android:text="Total views"
+                android:textSize="16sp" />
+
+            <TextView
+                android:id="@+id/tv_me_total_posts"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_below="@+id/tv_me_total_views"
+                android:layout_alignStart="@+id/tv_me_name"
+                android:layout_alignLeft="@+id/tv_me_name"
+                android:layout_marginTop="8dp"
+                android:text="Total posts"
+                android:textSize="16sp" />
+        </RelativeLayout>
+
+        <android.support.v7.widget.RecyclerView
+            android:id="@+id/rv_me_created_posts"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:padding="4dp"
+            android:visibility="gone"
+            app:layoutManager="android.support.v7.widget.LinearLayoutManager"
+            app:reverseLayout="true"
+            app:stackFromEnd="true" />
+    </LinearLayout>
 
     <Button
         android:id="@+id/b_me_sign_in"
