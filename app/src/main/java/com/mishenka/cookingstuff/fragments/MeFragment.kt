@@ -189,6 +189,35 @@ class MeFragment : Fragment(), MainActivity.MainActivityListener {
             rvPosts?.visibility = View.VISIBLE
 
             val databaseRef = FirebaseDatabase.getInstance().reference
+            val currentUserRef = databaseRef.child(Utils.CHILD_USER).child(firebaseUser.uid)
+            currentUserRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onCancelled(p0: DatabaseError) {
+                    throw p0.toException()
+                }
+
+                override fun onDataChange(p0: DataSnapshot) {
+                    if (p0.hasChildren()) {
+                        val iterator = p0.children.iterator()
+                        while (iterator.hasNext()) {
+                            val snapshot = iterator.next()
+                            when (snapshot.key) {
+                                Utils.CHILD_USER_TOTAL_POSTS_COUNT -> {
+                                    val tvTotalPosts = view?.findViewById<TextView>(R.id.tv_me_total_posts)
+                                    tvTotalPosts?.text = "Total posts: ${snapshot.value?.toString()}"
+                                }
+                                Utils.CHILD_USER_TOTAL_STAR_COUNT -> {
+                                    val tvTotalStars = view?.findViewById<TextView>(R.id.tv_me_total_stars)
+                                    tvTotalStars?.text = "Total stars: ${snapshot.value?.toString()}"
+                                }
+                                Utils.CHILD_USER_TOTAL_READ_COUNT -> {
+                                    val tvTotalReads = view?.findViewById<TextView>(R.id.tv_me_total_views)
+                                    tvTotalReads?.text = "Total views: ${snapshot.value?.toString()}"
+                                }
+                            }
+                        }
+                    }
+                }
+            })
             val currentUserPostsRef = databaseRef.child(Utils.CHILD_USER).child(firebaseUser.uid).child(Utils.CHILD_USER_CREATED_POSTS)
             currentUserPostsRef.addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onCancelled(p0: DatabaseError) {

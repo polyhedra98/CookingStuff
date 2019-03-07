@@ -82,6 +82,22 @@ class DetailActivity : AppCompatActivity(), CommentListener {
                     Log.i("NYA", "Bookmark ingredients: $ingredientsList")
                     updateUIIngredients(ingredientsList)
 
+                    val recipeAuthorUID = bookmark?.authorUID
+                    recipeAuthorUID?.let { safeUID ->
+                        val authorRef = FirebaseDatabase.getInstance().reference.child(Utils.CHILD_USER).child(safeUID)
+                        authorRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                            override fun onCancelled(p0: DatabaseError) {
+                                throw p0.toException()
+                            }
+
+                            override fun onDataChange(p0: DataSnapshot) {
+                                p0.child(Utils.CHILD_USER_TOTAL_READ_COUNT).value?.let { safeReadCount ->
+                                    authorRef.child(Utils.CHILD_USER_TOTAL_READ_COUNT).setValue(safeReadCount as Long + 1)
+                                }
+                            }
+                        })
+                    }
+
                     val currentRecipeRef = FirebaseDatabase.getInstance().reference.child(Utils.CHILD_RECIPE).child(mRecipeKey!!)
                     currentRecipeRef.addListenerForSingleValueEvent(object : ValueEventListener {
                         override fun onCancelled(p0: DatabaseError) {
@@ -143,6 +159,21 @@ class DetailActivity : AppCompatActivity(), CommentListener {
                     val currentReadCount = p0.child(Utils.CHILD_RECIPE_READ_COUNT).value as Long?
                     currentReadCount?.let {
                         currentRecipeRef.child(Utils.CHILD_RECIPE_READ_COUNT).setValue(it + 1)
+                    }
+
+                    p0.child(Utils.CHILD_RECIPE_AUTHOR_UID).value?.toString().let { safeUID ->
+                        val authorRef = FirebaseDatabase.getInstance().reference.child(Utils.CHILD_USER).child(safeUID!!)
+                        authorRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                            override fun onCancelled(p0: DatabaseError) {
+                                throw p0.toException()
+                            }
+
+                            override fun onDataChange(p0: DataSnapshot) {
+                                p0.child(Utils.CHILD_USER_TOTAL_READ_COUNT).value?.let { safeReadCount ->
+                                    authorRef.child(Utils.CHILD_USER_TOTAL_READ_COUNT).setValue(safeReadCount as Long + 1)
+                                }
+                            }
+                        })
                     }
                 }
             })

@@ -10,7 +10,10 @@ import android.support.annotation.RequiresApi
 import android.util.Log
 import com.google.android.gms.tasks.Task
 import com.google.android.gms.tasks.Tasks
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import com.google.firebase.storage.FirebaseStorage
 import com.google.firebase.storage.StorageMetadata
 import com.google.firebase.storage.UploadTask
@@ -173,7 +176,20 @@ class ImprovedUploadService : JobService() {
                     commentsAllowed = mCommentsAllowed,mainPicUrl = mainPicDownloadUrl))
             dbRef.child(Utils.CHILD_WHOLE_RECIPE).child(key).setValue(WholeRecipe(key = key,
                     ingredientsList = ingredientsList, stepsList = safeFirebaseStepsList))
-            dbRef.child(Utils.CHILD_USER).child(mAuthorUID).child(Utils.CHILD_USER_CREATED_POSTS).child(key).setValue(true)
+            val authorRef = dbRef.child(Utils.CHILD_USER).child(mAuthorUID)
+            authorRef.child(Utils.CHILD_USER_CREATED_POSTS).child(key).setValue(true)
+            authorRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onCancelled(p0: DatabaseError) {
+                    throw p0.toException()
+                }
+
+                override fun onDataChange(p0: DataSnapshot) {
+                    p0.child(Utils.CHILD_USER_TOTAL_POSTS_COUNT).value?.let { safePostsCount ->
+                        authorRef.child(Utils.CHILD_USER_TOTAL_POSTS_COUNT).setValue(safePostsCount as Long + 1)
+                    }
+                }
+            })
+
         }.invokeOnCompletion {
             jobFinished(params, false)
         }

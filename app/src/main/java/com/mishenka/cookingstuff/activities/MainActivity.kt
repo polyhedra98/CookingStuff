@@ -145,6 +145,30 @@ class MainActivity : AppCompatActivity(), HomeFragment.HomeFragmentListener {
                         if (!alreadyStarred) {
                             //TODO("Saving is still buggy..")
                             trySchedulingBookmarkJob(key, user.uid)
+                            val recipeRef = FirebaseDatabase.getInstance().reference.child(Utils.CHILD_RECIPE).child(key)
+                            recipeRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                                override fun onCancelled(p0: DatabaseError) {
+                                    throw p0.toException()
+                                }
+
+                                override fun onDataChange(p0: DataSnapshot) {
+                                    val authorUID = p0.child(Utils.CHILD_RECIPE_AUTHOR_UID).value?.toString()
+                                    authorUID?.let { safeUID ->
+                                        val authorRef = FirebaseDatabase.getInstance().reference.child(Utils.CHILD_USER).child(safeUID)
+                                        authorRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                                            override fun onCancelled(p0: DatabaseError) {
+                                                throw p0.toException()
+                                            }
+
+                                            override fun onDataChange(p0: DataSnapshot) {
+                                                p0.child(Utils.CHILD_USER_TOTAL_STAR_COUNT).value?.let { safeStarValue ->
+                                                    authorRef.child(Utils.CHILD_USER_TOTAL_STAR_COUNT).setValue(safeStarValue as Long + 1)
+                                                }
+                                            }
+                                        })
+                                    }
+                                }
+                            })
                             view.setImageDrawable(ContextCompat.getDrawable(this@MainActivity, R.drawable.star_checked))
                         } else {
                             val currentStarRef = currentUserRef.child(Utils.CHILD_STARRED_POSTS).child(key)
@@ -163,6 +187,30 @@ class MainActivity : AppCompatActivity(), HomeFragment.HomeFragmentListener {
                                 }
                             })
                             deleteBookmarkData(key)
+                            val recipeRef = FirebaseDatabase.getInstance().reference.child(Utils.CHILD_RECIPE).child(key)
+                            recipeRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                                override fun onCancelled(p0: DatabaseError) {
+                                    throw p0.toException()
+                                }
+
+                                override fun onDataChange(p0: DataSnapshot) {
+                                    val authorUID = p0.child(Utils.CHILD_RECIPE_AUTHOR_UID).value?.toString()
+                                    authorUID?.let { safeUID ->
+                                        val authorRef = FirebaseDatabase.getInstance().reference.child(Utils.CHILD_USER).child(safeUID)
+                                        authorRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                                            override fun onCancelled(p0: DatabaseError) {
+                                                throw p0.toException()
+                                            }
+
+                                            override fun onDataChange(p0: DataSnapshot) {
+                                                p0.child(Utils.CHILD_USER_TOTAL_STAR_COUNT).value?.let { safeStarValue ->
+                                                    authorRef.child(Utils.CHILD_USER_TOTAL_STAR_COUNT).setValue(safeStarValue as Long - 1)
+                                                }
+                                            }
+                                        })
+                                    }
+                                }
+                            })
                             view.setImageDrawable(ContextCompat.getDrawable(this@MainActivity, R.drawable.star_unchecked))
                         }
                     }
