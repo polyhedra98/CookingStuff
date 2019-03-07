@@ -104,11 +104,19 @@ class HomeFragment : Fragment() {
                     holder.tvRecipeDescription.text = model.description
                     holder.tvWatchCount.text = "${model.readCount}"
                     if (model.mainPicUrl != null && model.mainPicUrl != "") {
-                        holder.ivMainPicture.visibility = View.VISIBLE
-                        Glide.with(holder.ivMainPicture.context)
-                                .load(model.mainPicUrl)
-                                .apply(RequestOptions().centerCrop())
-                                .into(holder.ivMainPicture)
+                        GlobalScope.launch(Dispatchers.Main) {
+                            val drawable = GlobalScope.async {
+                                Glide.with(holder.ivMainPicture.context)
+                                        .load(model.mainPicUrl)
+                                        .submit()
+                                        .get()
+                            }.await()
+                            holder.ivMainPicture.visibility = View.VISIBLE
+                            Glide.with(holder.ivMainPicture.context)
+                                    .load(drawable)
+                                    .apply(RequestOptions().centerCrop())
+                                    .into(holder.ivMainPicture)
+                        }
                     } else {
                         holder.ivMainPicture.visibility = View.GONE
                     }
@@ -170,11 +178,19 @@ class HomeFragment : Fragment() {
                     holder.tvAuthorName.text = model.author
                     holder.tvRecipeDescription.text = model.description
                     if (model.mainPicUri != null && model.mainPicUri != "") {
-                        holder.ivMainPicture.visibility = View.VISIBLE
-                        Glide.with(holder.ivMainPicture.context)
-                                .load(model.mainPicUri)
-                                .apply(RequestOptions().centerCrop())
-                                .into(holder.ivMainPicture)
+                        GlobalScope.launch(Dispatchers.Main) {
+                            val drawable = GlobalScope.async {
+                                Glide.with(holder.ivMainPicture.context)
+                                        .load(model.mainPicUri)
+                                        .submit()
+                                        .get()
+                            }.await()
+                            holder.ivMainPicture.visibility = View.VISIBLE
+                            Glide.with(holder.ivMainPicture.context)
+                                    .load(drawable)
+                                    .apply(RequestOptions().centerCrop())
+                                    .into(holder.ivMainPicture)
+                        }
                     } else {
                         holder.ivMainPicture.visibility = View.GONE
                     }

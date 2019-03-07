@@ -289,10 +289,19 @@ class DetailActivity : AppCompatActivity(), CommentListener {
     private fun updateUIMainPic(uri: String?) {
         val ivMainPic = findViewById<ImageView>(R.id.iv_detail_main_pic)
         if (uri != null) {
-            Glide.with(ivMainPic.context)
-                    .load(uri)
-                    .apply(RequestOptions().centerCrop())
-                    .into(ivMainPic)
+            GlobalScope.launch(Dispatchers.Main) {
+                val drawable = GlobalScope.async {
+                    Glide.with(ivMainPic.context)
+                            .load(uri)
+                            .apply(RequestOptions().centerCrop())
+                            .submit()
+                            .get()
+                }.await()
+                Glide.with(ivMainPic.context)
+                        .load(drawable)
+                        .apply(RequestOptions().centerCrop())
+                        .into(ivMainPic)
+            }
         } else {
             ivMainPic.visibility = View.GONE
         }

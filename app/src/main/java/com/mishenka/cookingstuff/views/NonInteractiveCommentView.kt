@@ -14,6 +14,10 @@ import com.bumptech.glide.request.RequestOptions
 import com.mishenka.cookingstuff.R
 import com.mishenka.cookingstuff.data.Comment
 import com.mishenka.cookingstuff.interfaces.CommentListener
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 
 class NonInteractiveCommentView : RelativeLayout {
     private val mCommentListener: CommentListener?
@@ -60,10 +64,18 @@ class NonInteractiveCommentView : RelativeLayout {
 
         val ivAvatar = findViewById<ImageView>(R.id.non_comment_avatar)
         mComment?.userAvatarUrl?.let { url ->
-            Glide.with(ivAvatar.context)
-                    .load(url)
-                    .apply(RequestOptions().centerCrop())
-                    .into(ivAvatar)
+            GlobalScope.launch(Dispatchers.Main) {
+                val drawable = GlobalScope.async {
+                    Glide.with(ivAvatar.context)
+                            .load(url)
+                            .submit()
+                            .get()
+                }.await()
+                Glide.with(ivAvatar.context)
+                        .load(drawable)
+                        .apply(RequestOptions().centerCrop())
+                        .into(ivAvatar)
+            }
         }
 
         val bLike = findViewById<ImageButton>(R.id.non_comment_like)

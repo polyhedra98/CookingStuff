@@ -7,7 +7,12 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import com.bumptech.glide.Glide
+import com.bumptech.glide.request.RequestOptions
 import com.mishenka.cookingstuff.R
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 
 class UpperRecipeView : LinearLayout {
     constructor(context: Context?) : super(context)
@@ -34,10 +39,19 @@ class UpperRecipeView : LinearLayout {
             tvAuthorName.text = it
         }
         mMainPicUri?.let {
-            val ivMainPic = findViewById<ImageView>(R.id.iv_upper_recipe_main)
-            Glide.with(ivMainPic.context)
-                    .load(it)
-                    .into(ivMainPic)
+            GlobalScope.launch(Dispatchers.Main) {
+                val ivMainPic = findViewById<ImageView>(R.id.iv_upper_recipe_main)
+                val drawable = GlobalScope.async {
+                    Glide.with(ivMainPic.context)
+                            .load(it)
+                            .submit()
+                            .get()
+                }.await()
+                Glide.with(ivMainPic.context)
+                        .load(drawable)
+                        .apply(RequestOptions().centerCrop())
+                        .into(ivMainPic)
+            }
         }
     }
 }

@@ -11,6 +11,10 @@ import com.bumptech.glide.Glide
 import com.bumptech.glide.request.RequestOptions
 import com.mishenka.cookingstuff.R
 import com.mishenka.cookingstuff.data.NonParcelableStep
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.async
+import kotlinx.coroutines.launch
 
 class NonInteractiveStepView : LinearLayout {
     private val mStep: NonParcelableStep
@@ -56,11 +60,19 @@ class NonInteractiveStepView : LinearLayout {
             tvStepDescription.layoutParams = params
             var counter = 0
             while (counter < picUriList.size) {
-                Glide.with(picList[counter].context)
-                        .load(picUriList[counter])
-                        .apply(RequestOptions().centerCrop())
-                        .into(picList[counter])
-                counter++
+                val innerCounter = counter++
+                GlobalScope.launch(Dispatchers.Main) {
+                    val drawable = GlobalScope.async {
+                        Glide.with(picList[innerCounter].context)
+                                .load(picUriList[innerCounter])
+                                .submit()
+                                .get()
+                    }.await()
+                    Glide.with(picList[innerCounter].context)
+                            .load(drawable)
+                            .apply(RequestOptions().centerCrop())
+                            .into(picList[innerCounter])
+                }
             }
             while (counter < picList.size) {
                 picList[counter].visibility = View.GONE
