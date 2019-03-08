@@ -33,7 +33,7 @@ class TempSupportBookmarkService : IntentService(TempSupportBookmarkService::cla
         val currentStarRef = currentUserRef.child(Utils.CHILD_STARRED_POSTS).child(key)
         currentStarRef.setValue(true)
         var stepsDeferred: Deferred<ArrayList<Step>?>? = null
-        val ingredientsToSave = ArrayList<Ingredient>()
+        var ingredientsDeferred: Deferred<ArrayList<Ingredient>?>? = null
 
         val currentWholeRecipeRef = FirebaseDatabase.getInstance().reference.child(Utils.CHILD_WHOLE_RECIPE).child(key)
         currentWholeRecipeRef.addListenerForSingleValueEvent(object : ValueEventListener {
@@ -44,11 +44,11 @@ class TempSupportBookmarkService : IntentService(TempSupportBookmarkService::cla
             override fun onDataChange(p0: DataSnapshot) {
                 val stepsList = p0.child(Utils.WHOLE_RECIPE_STEPS_LIST_CHILD).value
                 if (stepsList != null) {
-                    val mapper = Klaxon()
-                    val stepsDict = mapper.parseArray<NonParcelableStep?>(mapper.toJsonString(stepsList))
+                    stepsDeferred = GlobalScope.async {
+                        val mapper = Klaxon()
+                        val stepsDict = mapper.parseArray<NonParcelableStep?>(mapper.toJsonString(stepsList))
 
-                    stepsDict?.let { dict ->
-                        stepsDeferred = GlobalScope.async {
+                        stepsDict?.let { dict ->
                             val stepsToReturn = ArrayList<Step>()
                             for (step in dict) {
                                 val folder = File("${MainApplication.applicationContext().getDir(Utils.IMAGES_DIR, Context.MODE_PRIVATE)}")
@@ -117,14 +117,17 @@ class TempSupportBookmarkService : IntentService(TempSupportBookmarkService::cla
 
                 val ingredientsList = p0.child(Utils.WHOLE_RECIPE_INGREDIENTS_LIST_CHILD).value
                 if (ingredientsList != null) {
-                    val mapper = Klaxon()
-                    val ingredientsDict = mapper.parseArray<NonParcelableIngredient>(mapper.toJsonString(ingredientsList))
-                    ingredientsDict?.let { saveIngredientsDict ->
-                        for (ingredient in saveIngredientsDict) {
-                            ingredientsToSave.add(Ingredient(ingredient.isSeparator, ingredient.text))
+                    ingredientsDeferred = GlobalScope.async {
+                        val mapper = Klaxon()
+                        val ingredientsDict = mapper.parseArray<NonParcelableIngredient>(mapper.toJsonString(ingredientsList))
+                        ingredientsDict?.let { saveIngredientsDict ->
+                            val ingredientsToSave = ArrayList<Ingredient>()
+                            for (ingredient in saveIngredientsDict) {
+                                ingredientsToSave.add(Ingredient(ingredient.isSeparator, ingredient.text))
+                            }
+                            return@async ingredientsToSave
                         }
                     }
-
                 }
             }
         })
@@ -142,15 +145,6 @@ class TempSupportBookmarkService : IntentService(TempSupportBookmarkService::cla
             }
 
             override fun onDataChange(p0: DataSnapshot) {
-                nameToSave = p0.child(Utils.CHILD_RECIPE_NAME).value!!.toString()
-                authorUIDtoSave = p0.child(Utils.CHILD_RECIPE_AUTHOR_UID).value!!.toString()
-                authorToSave = p0.child(Utils.CHILD_RECIPE_AUTHOR).value?.toString()
-                descriptionToSave = p0.child(Utils.CHILD_RECIPE_DESCRIPTION).value?.toString()
-                val currentCommentsAllowed = p0.child(Utils.CHILD_RECIPE_COMMENTS).value as Boolean?
-                currentCommentsAllowed?.let { safeAllowed ->
-                    commentsAllowed = safeAllowed
-                }
-
                 val currentMainPicUrl = p0.child(Utils.CHILD_RECIPE_MAIN_PIC_URL).value
                 currentMainPicUrl?.let { safeMainPicUrl ->
                     mainPicDeferred = GlobalScope.async {
@@ -189,6 +183,15 @@ class TempSupportBookmarkService : IntentService(TempSupportBookmarkService::cla
                     }
                 }
 
+                nameToSave = p0.child(Utils.CHILD_RECIPE_NAME).value!!.toString()
+                authorUIDtoSave = p0.child(Utils.CHILD_RECIPE_AUTHOR_UID).value!!.toString()
+                authorToSave = p0.child(Utils.CHILD_RECIPE_AUTHOR).value?.toString()
+                descriptionToSave = p0.child(Utils.CHILD_RECIPE_DESCRIPTION).value?.toString()
+                val currentCommentsAllowed = p0.child(Utils.CHILD_RECIPE_COMMENTS).value as Boolean?
+                currentCommentsAllowed?.let { safeAllowed ->
+                    commentsAllowed = safeAllowed
+                }
+
                 val currentStarCount = p0.child(Utils.CHILD_RECIPE_STAR_COUNT).value as Long?
                 if (currentStarCount != null) {
                     currentRecipeRef.child(Utils.CHILD_RECIPE_STAR_COUNT).setValue(currentStarCount + 1)
@@ -199,8 +202,10 @@ class TempSupportBookmarkService : IntentService(TempSupportBookmarkService::cla
         })
 
         GlobalScope.launch {
+            Thread.sleep(1000)
             val mainPicUriToSave = mainPicDeferred?.await()
             val stepsToSave = stepsDeferred?.await()
+            val ingredientsToSave = ingredientsDeferred?.await()
             val bookmark = BookmarkData(key = key, name = nameToSave, authorUID = authorUIDtoSave, author = authorToSave,
                     description = descriptionToSave, mainPicUri = mainPicUriToSave, commentsAllowed = commentsAllowed,
                     ingredientsList = ingredientsToSave, stepsList = stepsToSave)
