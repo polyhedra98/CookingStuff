@@ -42,7 +42,7 @@ private const val ARG_PARAM2 = "param2"
  * create an instance of this fragment.
  *
  */
-//TODO("Implement statistics")
+//TODO("Duplicates created posts when user signs in")
 class MeFragment : Fragment(), MainActivity.MainActivityListener {
     private var param1: String? = null
     private var param2: String? = null
@@ -76,72 +76,71 @@ class MeFragment : Fragment(), MainActivity.MainActivityListener {
         } else {
             //throw RuntimeException(context.toString() + " must implement MeFragmentListener")
         }
-        FirebaseAuth.getInstance().currentUser?.let { firebaseUser ->
-            mRecipeAdapter = object : RecyclerView.Adapter<HomeFragment.RecipeViewHolder>() {
-                override fun onCreateViewHolder(p0: ViewGroup, p1: Int): HomeFragment.RecipeViewHolder {
-                    val view = LayoutInflater.from(p0.context)
-                            .inflate(R.layout.item_recipe, p0, false)
-                    return HomeFragment.RecipeViewHolder(view)
-                }
+        val firebaseUser = FirebaseAuth.getInstance().currentUser
+        mRecipeAdapter = object : RecyclerView.Adapter<HomeFragment.RecipeViewHolder>() {
+            override fun onCreateViewHolder(p0: ViewGroup, p1: Int): HomeFragment.RecipeViewHolder {
+                val view = LayoutInflater.from(p0.context)
+                        .inflate(R.layout.item_recipe, p0, false)
+                return HomeFragment.RecipeViewHolder(view)
+            }
 
-                override fun getItemCount(): Int = posts.size
+            override fun getItemCount(): Int = posts.size
 
-                override fun onBindViewHolder(holder: HomeFragment.RecipeViewHolder, position: Int) {
-                    val model = posts[position]
-                    holder.tvRecipeName.text = model.name
-                    holder.tvAuthorName.text = model.author
-                    holder.tvRecipeDescription.text = model.description
-                    if (model.mainPicUrl != null && model.mainPicUrl != "") {
-                        holder.ivMainPicture.visibility = View.VISIBLE
-                        GlobalScope.launch(Dispatchers.Main) {
-                            val drawable = GlobalScope.async {
-                                Glide.with(this@MeFragment)
-                                        .load(model.mainPicUrl)
-                                        .apply(RequestOptions().centerCrop())
-                                        .submit()
-                                        .get()
-                            }.await()
-                            holder.ivMainPicture.setImageDrawable(drawable)
-                        }
-                    } else {
-                        holder.ivMainPicture.visibility = View.GONE
+            override fun onBindViewHolder(holder: HomeFragment.RecipeViewHolder, position: Int) {
+                val model = posts[position]
+                holder.tvRecipeName.text = model.name
+                holder.tvAuthorName.text = model.author
+                holder.tvRecipeDescription.text = model.description
+                if (model.mainPicUrl != null && model.mainPicUrl != "") {
+                    holder.ivMainPicture.visibility = View.VISIBLE
+                    GlobalScope.launch(Dispatchers.Main) {
+                        val drawable = GlobalScope.async {
+                            Glide.with(this@MeFragment)
+                                    .load(model.mainPicUrl)
+                                    .apply(RequestOptions().centerCrop())
+                                    .submit()
+                                    .get()
+                        }.await()
+                        holder.ivMainPicture.setImageDrawable(drawable)
                     }
-                    //TODO("Calling this for each post seems far from being ok")
-                    model.key?.let { safeKey ->
-                        val recipeRef = FirebaseDatabase.getInstance().reference.child(Utils.CHILD_RECIPE).child(safeKey).child(Utils.CHILD_RECIPE_READ_COUNT)
-                        recipeRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                } else {
+                    holder.ivMainPicture.visibility = View.GONE
+                }
+                //TODO("Calling this for each post seems far from being ok")
+                model.key?.let { safeKey ->
+                    val recipeRef = FirebaseDatabase.getInstance().reference.child(Utils.CHILD_RECIPE).child(safeKey).child(Utils.CHILD_RECIPE_READ_COUNT)
+                    recipeRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                        override fun onCancelled(p0: DatabaseError) {
+                            throw p0.toException()
+                        }
+
+                        override fun onDataChange(p0: DataSnapshot) {
+                            holder.tvWatchCount.text = p0.value?.toString()
+                        }
+                    })
+                    var isStarred: Boolean? = false
+                    firebaseUser?.let { fbUser ->
+                        val starRef = FirebaseDatabase.getInstance().reference.child(Utils.CHILD_USER).child(fbUser.uid).child(Utils.CHILD_STARRED_POSTS).child(model.key!!)
+                        starRef.addListenerForSingleValueEvent(object : ValueEventListener {
                             override fun onCancelled(p0: DatabaseError) {
                                 throw p0.toException()
                             }
 
                             override fun onDataChange(p0: DataSnapshot) {
-                                holder.tvWatchCount.text = p0.value?.toString()
+                                isStarred = p0.value as Boolean?
+                                if (isStarred != null && isStarred!!) {
+                                    holder.bStar.setImageDrawable(ContextCompat.getDrawable(MainApplication.applicationContext(), R.drawable.star_checked))
+                                } else {
+                                    holder.bStar.setImageDrawable(ContextCompat.getDrawable(MainApplication.applicationContext(), R.drawable.star_unchecked))
+                                }
                             }
                         })
-                        var isStarred: Boolean? = false
-                        firebaseUser.let { fbUser ->
-                            val starRef = FirebaseDatabase.getInstance().reference.child(Utils.CHILD_USER).child(fbUser.uid).child(Utils.CHILD_STARRED_POSTS).child(model.key!!)
-                            starRef.addListenerForSingleValueEvent(object : ValueEventListener {
-                                override fun onCancelled(p0: DatabaseError) {
-                                    throw p0.toException()
-                                }
-
-                                override fun onDataChange(p0: DataSnapshot) {
-                                    isStarred = p0.value as Boolean?
-                                    if (isStarred != null && isStarred!!) {
-                                        holder.bStar.setImageDrawable(ContextCompat.getDrawable(MainApplication.applicationContext(), R.drawable.star_checked))
-                                    } else {
-                                        holder.bStar.setImageDrawable(ContextCompat.getDrawable(MainApplication.applicationContext(), R.drawable.star_unchecked))
-                                    }
-                                }
-                            })
-                        }
-                        holder.bStar.setOnClickListener {
-                            mListener?.onStarButtonClicked(model.key, it as ImageButton)
-                        }
-                        holder.upperRecipe.setOnClickListener {
-                            mListener?.onRecyclerItemClicked(posts[position].key)
-                        }
+                    }
+                    holder.bStar.setOnClickListener {
+                        mListener?.onStarButtonClicked(model.key, it as ImageButton)
+                    }
+                    holder.upperRecipe.setOnClickListener {
+                        mListener?.onRecyclerItemClicked(posts[position].key)
                     }
                 }
             }
@@ -269,10 +268,11 @@ class MeFragment : Fragment(), MainActivity.MainActivityListener {
                                                         }
                                                         posts.add(recipeToShow)
                                                         //TODO("Smartly notify data set")
-                                                        mRecipeAdapter?.notifyDataSetChanged()
+
                                                     }
                                                 }
                                             }
+                                            mRecipeAdapter?.notifyDataSetChanged()
                                         }
                                     }
                                 })

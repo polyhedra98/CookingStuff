@@ -205,6 +205,7 @@ class DetailActivity : AppCompatActivity(), CommentListener {
     }
 
     private fun updateUIComments(commentsAllowed: Boolean?) {
+        val user = FirebaseAuth.getInstance().currentUser
         if (commentsAllowed != null && commentsAllowed) {
             val vgOuterComments = findViewById<ViewGroup>(R.id.detail_outer_comments)
             vgOuterComments.visibility = View.VISIBLE
@@ -213,33 +214,35 @@ class DetailActivity : AppCompatActivity(), CommentListener {
                     LinearLayout.LayoutParams.MATCH_PARENT,
                     LinearLayout.LayoutParams.WRAP_CONTENT
             )
-            val user = FirebaseAuth.getInstance().currentUser
-            mComment = Comment(userAvatarUrl = user?.photoUrl?.toString())
-            vgComments.addView(CommentView(mComment!!, this@DetailActivity), params)
 
             var deferredLikedComments: Deferred<ArrayList<String>?>? = null
-            user?.uid?.let { safeUID ->
-                val localUserCommentsRef = FirebaseDatabase.getInstance().reference.child(Utils.CHILD_USER).child(safeUID).child(Utils.CHILD_USER_LIKED_COMMENTS)
-                localUserCommentsRef.addListenerForSingleValueEvent(object : ValueEventListener {
-                    override fun onCancelled(p0: DatabaseError) {
-                        throw p0.toException()
-                    }
+            if (user != null) {
+                mComment = Comment(userAvatarUrl = user?.photoUrl?.toString())
+                vgComments.addView(CommentView(mComment!!, this@DetailActivity), params)
 
-                    override fun onDataChange(p0: DataSnapshot) {
-                        if (p0.hasChildren()) {
-                            deferredLikedComments = GlobalScope.async {
-                                val deferredLikedCommentsList = ArrayList<String>()
-                                p0.children.forEach { snapshotChild ->
-                                    snapshotChild.key?.let { safeSnapshotKey ->
-                                        Log.i("NYA", "forEach snapshot key: $safeSnapshotKey")
-                                        deferredLikedCommentsList.add(safeSnapshotKey)
+                user?.uid?.let { safeUID ->
+                    val localUserCommentsRef = FirebaseDatabase.getInstance().reference.child(Utils.CHILD_USER).child(safeUID).child(Utils.CHILD_USER_LIKED_COMMENTS)
+                    localUserCommentsRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                        override fun onCancelled(p0: DatabaseError) {
+                            throw p0.toException()
+                        }
+
+                        override fun onDataChange(p0: DataSnapshot) {
+                            if (p0.hasChildren()) {
+                                deferredLikedComments = GlobalScope.async {
+                                    val deferredLikedCommentsList = ArrayList<String>()
+                                    p0.children.forEach { snapshotChild ->
+                                        snapshotChild.key?.let { safeSnapshotKey ->
+                                            Log.i("NYA", "forEach snapshot key: $safeSnapshotKey")
+                                            deferredLikedCommentsList.add(safeSnapshotKey)
+                                        }
                                     }
+                                    deferredLikedCommentsList
                                 }
-                                deferredLikedCommentsList
                             }
                         }
-                    }
-                })
+                    })
+                }
             }
 
             val localRecipeCommentsRef = FirebaseDatabase.getInstance().reference.child(Utils.CHILD_WHOLE_RECIPE).child(mRecipeKey!!).child(Utils.WHOLE_RECIPE_COMMENTS)
@@ -249,6 +252,7 @@ class DetailActivity : AppCompatActivity(), CommentListener {
                 }
 
                 override fun onDataChange(p0: DataSnapshot) {
+                    val indexToAdd = if (user != null) 1 else 0
                     if (p0.hasChildren()) {
                         GlobalScope.launch(Dispatchers.Main) {
                             val iterator = p0.children.iterator()
@@ -274,7 +278,7 @@ class DetailActivity : AppCompatActivity(), CommentListener {
                                         Utils.COMMENT_SNAPSHOT_LIKE_COUNT -> commentToShow.likeCount = commentSnapshot.value as Long?
                                     }
                                 }
-                                vgComments.addView(NonInteractiveCommentView(commentToShow, liked, this@DetailActivity), 1, params)
+                                vgComments.addView(NonInteractiveCommentView(commentToShow, liked, this@DetailActivity), indexToAdd, params)
                             }
                         }
                     }

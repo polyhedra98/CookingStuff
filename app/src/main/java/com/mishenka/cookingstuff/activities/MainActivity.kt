@@ -32,7 +32,7 @@ import java.io.File
 
 class MainActivity : AppCompatActivity(), HomeFragment.HomeFragmentListener {
     private lateinit var mAuth : FirebaseAuth
-    private var mUsername = "anonymous"
+    private var mMenu: Menu? = null
 
     private val HOME_TAG = "HOME_TAG"
     private val BOOKMARK_TAG = "BOOKMARK_TAG"
@@ -45,7 +45,7 @@ class MainActivity : AppCompatActivity(), HomeFragment.HomeFragmentListener {
         setContentView(R.layout.activity_main)
 
         mAuth = FirebaseAuth.getInstance()
-
+        setupMenu()
         val instantiatedHomeFragment = supportFragmentManager.findFragmentByTag(HOME_TAG)
         if (instantiatedHomeFragment == null) {
             supportFragmentManager.beginTransaction().add(R.id.fragment_container, HomeFragment.newInstance(Utils.HOME_FRAGMENT_OPTION), HOME_TAG).commit()
@@ -54,6 +54,7 @@ class MainActivity : AppCompatActivity(), HomeFragment.HomeFragmentListener {
         findViewById<Button>(R.id.tab_button_home).setOnClickListener {
             val currentHomeFragment = supportFragmentManager.findFragmentByTag(HOME_TAG)
             if (currentHomeFragment == null) {
+                setupMenu()
                 supportFragmentManager.beginTransaction().replace(R.id.fragment_container, HomeFragment.newInstance(Utils.HOME_FRAGMENT_OPTION), HOME_TAG).commit()
             }
         }
@@ -61,6 +62,7 @@ class MainActivity : AppCompatActivity(), HomeFragment.HomeFragmentListener {
         findViewById<Button>(R.id.tab_button_bookmark).setOnClickListener {
             val currentBookmarkFragment = supportFragmentManager.findFragmentByTag(BOOKMARK_TAG)
             if (currentBookmarkFragment == null) {
+                setupMenu()
                 supportFragmentManager.beginTransaction().replace(R.id.fragment_container, HomeFragment.newInstance(Utils.BOOKMARK_FRAGMENT_OPTION), BOOKMARK_TAG).commit()
             }
         }
@@ -70,9 +72,9 @@ class MainActivity : AppCompatActivity(), HomeFragment.HomeFragmentListener {
                 val intent = Intent(this, AddRecipeActivity::class.java)
                 startActivity(intent)
             } else {
-                val currentHomeFragment = supportFragmentManager.findFragmentByTag(HOME_TAG)
-                if (currentHomeFragment == null) {
-                    supportFragmentManager.beginTransaction().replace(R.id.fragment_container, HomeFragment.newInstance(Utils.HOME_FRAGMENT_OPTION), HOME_TAG).commit()
+                val currentMeFragment = supportFragmentManager.findFragmentByTag(ME_TAG)
+                if (currentMeFragment == null) {
+                    supportFragmentManager.beginTransaction().replace(R.id.fragment_container, MeFragment.newInstance(), ME_TAG).commit()
                 }
             }
         }
@@ -80,9 +82,16 @@ class MainActivity : AppCompatActivity(), HomeFragment.HomeFragmentListener {
         findViewById<Button>(R.id.tab_button_me).setOnClickListener {
             val currentMeFragment = supportFragmentManager.findFragmentByTag(ME_TAG)
             if (currentMeFragment == null) {
+                setupMenu(true)
                 supportFragmentManager.beginTransaction().replace(R.id.fragment_container, MeFragment.newInstance(), ME_TAG).commit()
             }
         }
+    }
+
+    private fun setupMenu(isComingToMe: Boolean = false) {
+        val user = FirebaseAuth.getInstance().currentUser
+        val signOutOption = mMenu?.findItem(R.id.action_sign_out)
+        signOutOption?.isVisible = user != null && isComingToMe
     }
 
     override fun onStart() {
@@ -95,14 +104,16 @@ class MainActivity : AppCompatActivity(), HomeFragment.HomeFragmentListener {
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
         val inflater = menuInflater
         inflater.inflate(R.menu.main_menu, menu)
+        mMenu = menu
+        setupMenu()
         return super.onCreateOptionsMenu(menu)
     }
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         when (item?.itemId) {
-            //TODO("Get rid of Sign Out for non-Signed In users")
             R.id.action_sign_out -> {
                 if (mAuth.currentUser != null) {
+                    setupMenu()
                     AuthUI.getInstance().signOut(this).addOnCompleteListener {
                         updateUI(null)
                         val currentFragment = supportFragmentManager.findFragmentById(R.id.fragment_container)
@@ -126,7 +137,6 @@ class MainActivity : AppCompatActivity(), HomeFragment.HomeFragmentListener {
         }
     }
 
-    //TODO("Finish bookmarks saving and deleting")
     override fun onStarButtonClicked(recipeKey: String?, view : ImageButton) {
         recipeKey?.let { key ->
             mAuth.currentUser?.let { user ->
